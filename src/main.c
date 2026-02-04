@@ -23,6 +23,7 @@
 #include "game.h"
 #include "lua_api.h"
 #include "sdl.h"
+#include "spritesheet.h"
 
 #define CONFIG_FILE_PATH ("config.ini")
 
@@ -71,6 +72,11 @@ int main(void) {
 
   uint64_t next_frame = 0;
 
+  SpriteSheet *bullets_sheet =
+      spritesheet_load(renderer, "./assets/EoSD_bullets.json");
+
+  log_info("SpriteSheet with bullets loaded");
+
   while (running) {
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_EVENT_QUIT) {
@@ -86,7 +92,7 @@ int main(void) {
     SDL_RenderClear(renderer);
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-    render_bullets(bullets, renderer);
+    render_bullets(bullets, renderer, bullets_sheet);
 
     SDL_RenderPresent(renderer);
 
@@ -98,6 +104,7 @@ int main(void) {
   }
 
   lua_close(L);
+  spritesheet_free(bullets_sheet);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();

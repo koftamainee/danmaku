@@ -1,0 +1,93 @@
+{
+  "texture": "assets/EoSD_bullets.png",
+  "sprites": [
+ {
+      "name": "bullet_white",
+      "x": 0,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    },
+
+ {
+      "name": "bullet_dark_red",
+      "x": 16,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    },
+
+ {
+      "name": "bullet_red",
+      "x": 32,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    },
+
+    {
+      "name": "bullet_pink",
+      "x": 48,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "name": "bullet_purple",
+      "x": 64,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "name": "bullet_blue",
+      "x": 80,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "name": "bullet_cyan",
+      "x": 96,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "name": "bullet_green",
+      "x": 112,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "name": "bullet_light_green",
+      "x": 128,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "name": "bullet_yellow",
+      "x": 144,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "name": "bullet_orange",
+      "x": 160,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "name": "bullet_white",
+      "x": 176,
+      "y": 48,
+      "width": 16,
+      "height": 16
+    }
+  ]
+}
+

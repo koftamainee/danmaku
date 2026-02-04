@@ -41,43 +41,63 @@ local lifetime = 400 -- new bullet lifetime
 local function spawn_edge_bullets_chain()
 	bullets = {}
 
-	local function add_bullet(x, y)
-		local id = spawn_bullet(x, y, 0, 0, lifetime)
+	local function add_bullet(x, y, sprite)
+		local id = spawn_bullet(x, y, 0, 0, lifetime, sprite)
 		bullets[#bullets + 1] = { id = id, x = x, y = y, lifetime = lifetime }
 	end
 
-	-- Top edge
+	-- Color sequence for edges
+	local edge_colors = {
+		"bullet_blue",
+		"bullet_cyan",
+		"bullet_green",
+		"bullet_light_green",
+		"bullet_yellow",
+		"bullet_orange",
+		"bullet_red",
+		"bullet_dark_red",
+		"bullet_purple",
+		"bullet_pink",
+		"bullet_white",
+	}
+
+	-- Top edge - blue to cyan gradient
 	for i = 1, bullet_count_per_edge do
 		local x = edge_margin + (screen_width - 2 * edge_margin) * (i - 1) / (bullet_count_per_edge - 1)
 		local y = edge_margin
-		add_bullet(x, y)
+		local color_idx = math.floor((i - 1) * #edge_colors / bullet_count_per_edge) + 1
+		add_bullet(x, y, edge_colors[color_idx])
 		wait(2)
 	end
 
-	-- Right edge
+	-- Right edge - green gradient
 	for i = 1, bullet_count_per_edge do
 		local x = screen_width - edge_margin
 		local y = edge_margin + (screen_height - 2 * edge_margin) * (i - 1) / (bullet_count_per_edge - 1)
-		add_bullet(x, y)
+		local color_idx = math.floor((i - 1) * #edge_colors / bullet_count_per_edge) + 1
+		add_bullet(x, y, edge_colors[color_idx % #edge_colors + 1])
 		wait(1)
 	end
 
-	-- Bottom edge
+	-- Bottom edge - yellow to orange gradient
 	for i = bullet_count_per_edge, 1, -1 do
 		local x = edge_margin + (screen_width - 2 * edge_margin) * (i - 1) / (bullet_count_per_edge - 1)
 		local y = screen_height - edge_margin
-		add_bullet(x, y)
+		local color_idx = math.floor((bullet_count_per_edge - i) * #edge_colors / bullet_count_per_edge) + 1
+		add_bullet(x, y, edge_colors[color_idx])
 		wait(1)
 	end
 
-	-- Left edge
+	-- Left edge - red to purple gradient
 	for i = bullet_count_per_edge, 1, -1 do
 		local x = edge_margin
 		local y = edge_margin + (screen_height - 2 * edge_margin) * (i - 1) / (bullet_count_per_edge - 1)
-		add_bullet(x, y)
+		local color_idx = math.floor((bullet_count_per_edge - i) * #edge_colors / bullet_count_per_edge) + 1
+		add_bullet(x, y, edge_colors[color_idx % #edge_colors + 1])
 		wait(1)
 	end
 end
+
 function DanmakuWheel(x, y)
 	local angle = 0.0
 	for frame = 1, 120 do
@@ -85,7 +105,14 @@ function DanmakuWheel(x, y)
 			local arm_angle = angle + (arm * math.pi / 3)
 			for bullet = 1, 3 do
 				local speed = 1.5 + bullet * 0.5
-				spawn_bullet(x, y, arm_angle, speed, 320 + 60)
+				local sprite = "bullet_yellow"
+				if bullet == 2 then
+					sprite = "bullet_orange"
+				end
+				if bullet == 3 then
+					sprite = "bullet_red"
+				end
+				spawn_bullet(x, y, arm_angle, speed, 320 + 60, sprite)
 			end
 		end
 		angle = angle + 0.12

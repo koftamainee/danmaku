@@ -18,11 +18,12 @@ static int lua_spawn_bullet(lua_State *L) {
   double angle = luaL_checknumber(L, 3); // in radians
   double speed = luaL_checknumber(L, 4);
   int lifetime = luaL_checkinteger(L, 5);
+  const char *sprite = luaL_checkstring(L, 6);
 
   vec2 position = {x, y};
   vec2 velocity = {speed * sin(angle), speed * cos(angle)};
 
-  int result = spawn_bullet(bullets, position, velocity, lifetime);
+  int result = spawn_bullet(bullets, position, velocity, lifetime, sprite);
   lua_pushinteger(L, result);
   return 1;
 }

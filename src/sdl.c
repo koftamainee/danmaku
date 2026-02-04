@@ -1,13 +1,13 @@
 #include "sdl.h"
 #include "bullet.h"
 #include "log.h"
+#include "spritesheet.h"
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_oldnames.h>
+#include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3_image/SDL_image.h>
-
-extern SDL_Texture *bullet_sheet;
 
 int sdl_init(const Configuration *config, SDL_Window **window,
              SDL_Renderer **renderer) {
@@ -45,37 +45,26 @@ int sdl_init(const Configuration *config, SDL_Window **window,
     log_info("Fullscreen mode set to false");
   }
 
-  bullet_sheet = IMG_LoadTexture(*renderer, "./assets/EoSD_bullets.png");
-  if (bullet_sheet == NULL) {
-    log_fatal("Failed to load bullet sheet: %s", SDL_GetError());
-    return 1;
-  }
-
-  log_info("Bullets texture sheet loaded");
-
   return 0;
 }
 
-int render_bullets(Bullet *bullets, SDL_Renderer *renderer) {
-  if (bullets == NULL || renderer == NULL)
+int render_bullets(Bullet *bullets, SDL_Renderer *renderer,
+                   SpriteSheet *sprites) {
+  if (bullets == NULL || renderer == NULL || sprites == NULL)
     return 1;
+
+  SDL_Texture *texture = spritesheet_texture(sprites);
 
   for (int i = 0; i < MAX_BULLETS_COUNT; i++) {
     if (bullets[i].lifetime == 0)
       continue;
 
-    SDL_FRect src;
-    int offset = 32 + 16;
-    int tile_size = 16;
-    int color = 3;
+    const SpriteRegion *region = spritesheet_get(sprites, bullets[i].sprite);
 
-    src.x = color * 16;
-    src.y = offset;
-    src.w = tile_size;
-    src.h = tile_size;
-    SDL_FRect dest = {bullets[i].position[0], bullets[i].position[1], 16.0,
-                      16.0};
-    SDL_RenderTexture(renderer, bullet_sheet, &src, &dest);
+    SDL_FRect dest = {bullets[i].position[0], bullets[i].position[1],
+                      region->src.w, region->src.h};
+
+    SDL_RenderTexture(renderer, texture, &(region->src), &dest);
   }
   return 0;
 }

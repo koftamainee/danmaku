@@ -7,6 +7,7 @@ typedef struct {
   vec2 position;
   vec2 velocity;
   unsigned int lifetime;
+  char sprite[64];
 } Bullet;
 
 void bullet_set_angle(int id, float angle);

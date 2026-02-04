@@ -1,4 +1,5 @@
 #include "game.h"
+#include <string.h>
 
 static inline int find_free_bullet_slot(const Bullet *bullets) {
   if (bullets == NULL)
@@ -11,7 +12,8 @@ static inline int find_free_bullet_slot(const Bullet *bullets) {
   return -1;
 }
 
-int spawn_bullet(Bullet *bullets, vec2 position, vec2 velocity, int lifetime) {
+int spawn_bullet(Bullet *bullets, vec2 position, vec2 velocity, int lifetime,
+                 const char *sprite) {
 
   int slot = find_free_bullet_slot(bullets);
   if (slot < 0)
@@ -21,6 +23,13 @@ int spawn_bullet(Bullet *bullets, vec2 position, vec2 velocity, int lifetime) {
   glm_vec2_copy(position, b->position);
   glm_vec2_copy(velocity, b->velocity);
   b->lifetime = lifetime;
+
+  if (sprite != NULL) {
+    strncpy(b->sprite, sprite, sizeof(b->sprite) - 1);
+    b->sprite[sizeof(b->sprite) - 1] = '\0';
+  } else {
+    b->sprite[0] = '\0';
+  }
 
   return slot;
 }
