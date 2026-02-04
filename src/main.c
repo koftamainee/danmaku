@@ -27,6 +27,7 @@
 #define CONFIG_FILE_PATH ("config.ini")
 
 Bullet bullets[MAX_BULLETS_COUNT] = {0};
+SDL_Texture *bullet_sheet = NULL;
 
 int main(void) {
 
@@ -51,7 +52,7 @@ int main(void) {
     return 1;
   }
 
-  if (luaL_dofile(L, "stage1.lua") != LUA_OK) {
+  if (luaL_dofile(L, "stage0.lua") != LUA_OK) {
     log_error("Failed to load stage1.lua: %s", lua_tostring(L, -1));
     lua_pop(L, 1);
     return 1;

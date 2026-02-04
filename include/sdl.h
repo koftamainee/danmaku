@@ -8,3 +8,5 @@ int sdl_init(const Configuration *config, SDL_Window **window,
              SDL_Renderer **renderer);
 
 int render_bullets(Bullet *bullets, SDL_Renderer *renderer);
+
+SDL_Rect get_bullet_src_rect(int color_index);
