@@ -1,5 +1,5 @@
 {
-  "texture": "assets/EoSD_bullets.png",
+  "texture": "EoSD_bullets.png",
   "sprites": [
  {
       "name": "bullet_white",

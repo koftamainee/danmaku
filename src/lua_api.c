@@ -13,15 +13,15 @@
 extern Bullet bullets[MAX_BULLETS_COUNT];
 
 static int lua_spawn_bullet(lua_State *L) {
-  double x = luaL_checknumber(L, 1);
-  double y = luaL_checknumber(L, 2);
-  double angle = luaL_checknumber(L, 3); // in radians
-  double speed = luaL_checknumber(L, 4);
-  int lifetime = luaL_checkinteger(L, 5);
+  float x = (float)luaL_checknumber(L, 1);
+  float y = (float)luaL_checknumber(L, 2);
+  float angle = (float)luaL_checknumber(L, 3); // in radians
+  float speed = (float)luaL_checknumber(L, 4);
+  int lifetime = (int)luaL_checkinteger(L, 5);
   const char *sprite = luaL_checkstring(L, 6);
 
   vec2 position = {x, y};
-  vec2 velocity = {speed * sin(angle), speed * cos(angle)};
+  vec2 velocity = {speed * (float)sin(angle), speed * (float)cos(angle)};
 
   int result = spawn_bullet(bullets, position, velocity, lifetime, sprite);
   lua_pushinteger(L, result);
@@ -29,7 +29,7 @@ static int lua_spawn_bullet(lua_State *L) {
 }
 
 static int lua_wait(lua_State *L) {
-  int frames = luaL_checkinteger(L, 1);
+  int frames = (int)luaL_checkinteger(L, 1);
   if (frames < 0) {
     frames = 0;
   }
@@ -48,62 +48,62 @@ static int lua_yield_frame(lua_State *L) {
 }
 
 static int lua_bullet_set_angle(lua_State *L) {
-  int id = luaL_checkinteger(L, 1);
-  float angle = luaL_checknumber(L, 2);
+  int id = (int)luaL_checkinteger(L, 1);
+  float angle = (float)luaL_checknumber(L, 2);
 
   bullet_set_angle(id, angle);
   return 0;
 }
 
 static int lua_bullet_set_speed(lua_State *L) {
-  int id = luaL_checkinteger(L, 1);
-  float speed = luaL_checknumber(L, 2);
+  int id = (int)luaL_checkinteger(L, 1);
+  float speed = (float)luaL_checknumber(L, 2);
 
   bullet_set_speed(id, speed);
   return 0;
 }
 
 static int lua_bullet_set_velocity(lua_State *L) {
-  int id = luaL_checkinteger(L, 1);
-  float vx = luaL_checknumber(L, 2);
-  float vy = luaL_checknumber(L, 3);
+  int id = (int)luaL_checkinteger(L, 1);
+  float vx = (float)luaL_checknumber(L, 2);
+  float vy = (float)luaL_checknumber(L, 3);
 
   bullet_set_velocity(id, vx, vy);
   return 0;
 }
 
 static int lua_bullet_add_speed(lua_State *L) {
-  int id = luaL_checkinteger(L, 1);
-  float ds = luaL_checknumber(L, 2);
+  int id = (int)luaL_checkinteger(L, 1);
+  float ds = (float)luaL_checknumber(L, 2);
 
   bullet_add_speed(id, ds);
   return 0;
 }
 
 static int lua_bullet_rotate(lua_State *L) {
-  int id = luaL_checkinteger(L, 1);
-  float d_angle = luaL_checknumber(L, 2);
+  int id = (int)luaL_checkinteger(L, 1);
+  float d_angle = (float)luaL_checknumber(L, 2);
 
   bullet_rotate(id, d_angle);
   return 0;
 }
 
 static int lua_bullet_get_angle(lua_State *L) {
-  int id = luaL_checkinteger(L, 1);
+  int id = (int)luaL_checkinteger(L, 1);
   float angle = bullet_get_angle(id);
   lua_pushnumber(L, angle);
   return 1;
 }
 
 static int lua_bullet_get_speed(lua_State *L) {
-  int id = luaL_checkinteger(L, 1);
+  int id = (int)luaL_checkinteger(L, 1);
   float speed = bullet_get_speed(id);
   lua_pushnumber(L, speed);
   return 1;
 }
 
 static int lua_bullet_get_velocity(lua_State *L) {
-  int id = luaL_checkinteger(L, 1);
+  int id = (int)luaL_checkinteger(L, 1);
   float vx = bullet_get_vx(id);
   float vy = bullet_get_vy(id);
   lua_pushnumber(L, vx);
@@ -112,14 +112,14 @@ static int lua_bullet_get_velocity(lua_State *L) {
 }
 
 static int lua_bullet_set_lifetime(lua_State *L) {
-  int id = luaL_checkinteger(L, 1);
-  int lifetime = luaL_checkinteger(L, 2);
+  int id = (int)luaL_checkinteger(L, 1);
+  int lifetime = (int)luaL_checkinteger(L, 2);
   bullet_set_lifetime(id, lifetime);
   return 0;
 }
 
 static int lua_bullet_get_lifetime(lua_State *L) {
-  int id = luaL_checkinteger(L, 1);
+  int id = (int)luaL_checkinteger(L, 1);
   int lifetime = bullet_get_lifetime(id);
   lua_pushinteger(L, lifetime);
   return 1;
@@ -192,33 +192,30 @@ int update_section(lua_State *L, GameplaySection *section) {
   }
 
   int nres = 0;
-  int status =
-      lua_resume(co, L, 0, &nres); // Also fixed: pass L as the parent state
+  int status = lua_resume(co, L, 0, &nres);
 
   if (status == LUA_YIELD) {
-    // check if coroutine yielded a wait time
     if (lua_gettop(co) >= 1 && lua_isinteger(co, -1)) {
-      section->wait_frames = lua_tointeger(co, -1);
+      section->wait_frames = (int)lua_tointeger(co, -1);
       lua_pop(co, 1);
     }
   } else if (status == LUA_OK) {
-    // coroutine finished
     log_info("Section completed");
     luaL_unref(L, LUA_REGISTRYINDEX, section->lua_ref);
     section->lua_ref = LUA_REFNIL;
-    lua_pop(L, 1); // Pop the thread reference
+    lua_pop(L, 1);
     return 0;
+
   } else {
-    // error occurred
     const char *err = lua_tostring(co, -1);
     log_error("Lua error: %s", err ? err : "unknown error");
     lua_pop(co, 1);
     luaL_unref(L, LUA_REGISTRYINDEX, section->lua_ref);
     section->lua_ref = LUA_REFNIL;
-    lua_pop(L, 1); // Pop the thread reference
+    lua_pop(L, 1);
     return 1;
   }
 
-  lua_pop(L, 1); // Pop the thread reference after successful yield
+  lua_pop(L, 1);
   return 0;
 }

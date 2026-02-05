@@ -6,7 +6,7 @@
 typedef struct {
   vec2 position;
   vec2 velocity;
-  unsigned int lifetime;
+  int lifetime;
   char sprite[64];
 } Bullet;
 

@@ -1,4 +1,4 @@
 build/
 .cache/
-subprojects/*/  # Ignore all subproject contents
-!subprojects/*.wrap  # But keep the .wrap files
+subprojects/**/*/
+!subprojects/*.wrap

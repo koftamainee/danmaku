@@ -1,10 +1,13 @@
 #include "spritesheet.h"
 #include "log.h"
-#include "subprojects/cJSON-1.7.19/cJSON.h"
-#include "uthash.h"
 #include <SDL3_image/SDL_image.h>
+#include <cjson/cJSON.h>
+#include <libgen.h>
 #include <stdlib.h>
 #include <string.h>
+#include <uthash.h>
+
+#define PATH_MAX 4096
 
 struct SpriteSheet {
   SDL_Texture *texture;
@@ -20,13 +23,13 @@ static char *read_file(const char *path) {
   long len = ftell(f);
   fseek(f, 0, SEEK_SET);
 
-  char *buf = malloc(len + 1);
+  char *buf = malloc((size_t)len + 1);
   if (!buf) {
     fclose(f);
     return NULL;
   }
 
-  fread(buf, 1, len, f);
+  fread(buf, 1, (size_t)len, f);
   buf[len] = '\0';
   fclose(f);
   return buf;
@@ -62,9 +65,20 @@ SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path) {
     return NULL;
   }
 
-  spritesheet->texture = IMG_LoadTexture(renderer, texture_item->valuestring);
+  char texture_path[PATH_MAX];
+  char json_dir[PATH_MAX];
+  strncpy(json_dir, json_path, PATH_MAX - 1);
+  json_dir[PATH_MAX - 1] = '\0';
+  strncpy(texture_path, dirname(json_dir), PATH_MAX - 1);
+  texture_path[PATH_MAX - 1] = '\0';
+
+  strncat(texture_path, "/", PATH_MAX - strlen(texture_path) - 1);
+  strncat(texture_path, texture_item->valuestring,
+          PATH_MAX - strlen(texture_path) - 1);
+
+  spritesheet->texture = IMG_LoadTexture(renderer, texture_path);
   if (spritesheet->texture == NULL) {
-    log_fatal("Failed to load texture: %s", texture_item->valuestring);
+    log_fatal("Failed to load texture: %s", texture_path);
     cJSON_Delete(root);
     free(spritesheet);
     return NULL;
@@ -108,10 +122,10 @@ SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path) {
     }
     strcpy(entry->name, name_item->valuestring); // copy string
 
-    entry->region.src.x = x_item->valueint;
-    entry->region.src.y = y_item->valueint;
-    entry->region.src.w = w_item->valueint;
-    entry->region.src.h = h_item->valueint;
+    entry->region.src.x = (float)x_item->valueint;
+    entry->region.src.y = (float)y_item->valueint;
+    entry->region.src.w = (float)w_item->valueint;
+    entry->region.src.h = (float)h_item->valueint;
 
     HASH_ADD_KEYPTR(hh, spritesheet->sprites, entry->name, strlen(entry->name),
                     entry);

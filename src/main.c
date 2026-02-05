@@ -53,7 +53,7 @@ int main(void) {
     return 1;
   }
 
-  if (luaL_dofile(L, "stage0.lua") != LUA_OK) {
+  if (luaL_dofile(L, "./mods/base/stage1.lua") != LUA_OK) {
     log_error("Failed to load stage1.lua: %s", lua_tostring(L, -1));
     lua_pop(L, 1);
     return 1;
@@ -73,7 +73,11 @@ int main(void) {
   uint64_t next_frame = 0;
 
   SpriteSheet *bullets_sheet =
-      spritesheet_load(renderer, "./assets/EoSD_bullets.json");
+      spritesheet_load(renderer, "./mods/base/assets/EoSD_bullets.json");
+  if (bullets_sheet == NULL) {
+    log_fatal("Failed to load bullets SpriteSheet");
+    return 1;
+  }
 
   log_info("SpriteSheet with bullets loaded");
 
