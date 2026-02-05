@@ -53,7 +53,7 @@ int main(void) {
     return 1;
   }
 
-  if (luaL_dofile(L, "./mods/base/stage1.lua") != LUA_OK) {
+  if (luaL_dofile(L, "./mods/base/stage2.lua") != LUA_OK) {
     log_error("Failed to load stage1.lua: %s", lua_tostring(L, -1));
     lua_pop(L, 1);
     return 1;
