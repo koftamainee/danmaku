@@ -1,0 +1,10 @@
+{
+    "name": "Base Scenario",
+    "description": "A beginner-friendly scenario with 3 stages.",
+    "duration_minutes": 25,
+    "stages": [
+        "stages/stage1.lua",
+        "stages/stage2.lua",
+        "stages/stage3.lua"
+    ]
+}

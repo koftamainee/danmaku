@@ -1,124 +1,175 @@
 #include "bullet.h"
+#include "bullet_id.h"
+#include "bullet_system.h"
+#include <cglm/vec2.h>
 
 extern Bullet bullets[MAX_BULLETS_COUNT];
 
-static inline Bullet *bullet_get(int id) {
-  if (id < 0 || id >= MAX_BULLETS_COUNT)
-    return NULL;
-  return &bullets[id];
-}
-
-void bullet_set_angle(int id, float angle) {
+bool bullet_set_speed(BulletID id, float speed) {
   Bullet *b = bullet_get(id);
   if (b == NULL) {
-    return;
+    return false;
   }
 
-  float speed = glm_vec2_norm(b->velocity);
-  glm_vec2_copy((vec2){cosf(angle) * speed, sinf(angle) * speed}, b->velocity);
+  b->speed = speed;
+
+  return true;
 }
 
-void bullet_set_speed(int id, float speed) {
+bool bullet_set_accel(BulletID id, float accel) {
   Bullet *b = bullet_get(id);
   if (b == NULL) {
-    return;
+    return false;
   }
 
-  float angle = atan2f(b->velocity[1], b->velocity[0]);
-  glm_vec2_copy((vec2){cosf(angle) * speed, sinf(angle) * speed}, b->velocity);
+  b->accel = accel;
+
+  return true;
 }
 
-void bullet_set_velocity(int id, float vx, float vy) {
+bool bullet_set_min_speed(BulletID id, float min_speed) {
   Bullet *b = bullet_get(id);
   if (b == NULL) {
-    return;
+    return false;
   }
 
-  b->velocity[0] = vx;
-  b->velocity[1] = vy;
+  b->min_speed = min_speed;
+
+  return true;
 }
 
-void bullet_add_speed(int id, float ds) {
+bool bullet_set_max_speed(BulletID id, float max_speed) {
   Bullet *b = bullet_get(id);
   if (b == NULL) {
-    return;
+    return false;
   }
 
-  float speed = glm_vec2_norm(b->velocity);
-  if (speed == 0.0f) {
-    return;
-  }
+  b->max_speed = max_speed;
 
-  speed += ds;
-  if (speed < 0.0f) {
-    speed = 0.0f;
-  }
-
-  float angle = atan2f(b->velocity[1], b->velocity[0]);
-  glm_vec2_copy((vec2){cosf(angle) * speed, sinf(angle) * speed}, b->velocity);
+  return true;
 }
 
-void bullet_rotate(int id, float d_angle) {
+bool bullet_set_speed_limits(BulletID id, float min_speed, float max_speed) {
   Bullet *b = bullet_get(id);
   if (b == NULL) {
-    return;
+    return false;
   }
 
-  float speed = glm_vec2_norm(b->velocity);
-  if (speed == 0.0f) {
-    return;
-  }
+  b->max_speed = max_speed;
+  b->min_speed = min_speed;
 
-  float angle = atan2f(b->velocity[1], b->velocity[0]);
-  angle += d_angle;
-
-  glm_vec2_copy((vec2){cosf(angle) * speed, sinf(angle) * speed}, b->velocity);
+  return true;
 }
 
-float bullet_get_angle(int id) {
-  Bullet *b = bullet_get(id);
-  if (b == NULL)
-    return 0.0f;
-  return atan2f(b->velocity[1], b->velocity[0]);
-}
-
-float bullet_get_speed(int id) {
+bool bullet_set_angular_vel(BulletID id, float angular_vel) {
   Bullet *b = bullet_get(id);
   if (b == NULL) {
-    return 0.0f;
-  }
-  return glm_vec2_norm(b->velocity);
-}
-
-float bullet_get_vx(int id) {
-  Bullet *b = bullet_get(id);
-  if (b == NULL) {
-    return 0.0f;
-  }
-  return b->velocity[0];
-}
-
-float bullet_get_vy(int id) {
-  Bullet *b = bullet_get(id);
-  if (b == NULL) {
-    return 0.0f;
-  }
-  return b->velocity[1];
-}
-int bullet_get_lifetime(int id) {
-  Bullet *b = bullet_get(id);
-  if (b == NULL) {
-    return 0;
+    return false;
   }
 
-  return b->lifetime;
+  b->angular_vel = angular_vel;
+
+  return true;
 }
 
-void bullet_set_lifetime(int id, int lifetime) {
+bool bullet_set_angular_accel(BulletID id, float angular_accel) {
   Bullet *b = bullet_get(id);
   if (b == NULL) {
-    return;
+    return false;
+  }
+
+  b->angular_accel = angular_accel;
+
+  return true;
+}
+
+bool bullet_set_min_angular_vel(BulletID id, float min_angular_vel) {
+  Bullet *b = bullet_get(id);
+  if (b == NULL) {
+    return false;
+  }
+
+  b->min_angular_vel = min_angular_vel;
+
+  return true;
+}
+
+bool bullet_set_max_angular_vel(BulletID id, float max_angular_vel) {
+  Bullet *b = bullet_get(id);
+  if (b == NULL) {
+    return false;
+  }
+
+  b->max_angular_vel = max_angular_vel;
+
+  return true;
+}
+
+bool bullet_set_angular_vel_limits(BulletID id, float min_angular_vel,
+                                   float max_angular_vel) {
+  Bullet *b = bullet_get(id);
+  if (b == NULL) {
+    return false;
+  }
+
+  b->min_angular_vel = min_angular_vel;
+  b->max_angular_vel = max_angular_vel;
+
+  return true;
+}
+
+bool bullet_set_angle(BulletID id, float angle) {
+  Bullet *b = bullet_get(id);
+  if (b == NULL) {
+    return false;
+  }
+
+  b->angle = angle;
+
+  return true;
+}
+
+bool bullet_aim(BulletID id) {
+  Bullet *b = bullet_get(id);
+  if (b == NULL) {
+    return false;
+  }
+
+  b->angle = 0; // TODO: fix when player is implemented
+
+  return true;
+}
+
+bool bullet_set_parent_offset(BulletID id, vec2 offset) {
+  Bullet *b = bullet_get(id);
+  if (b == NULL) {
+    return false;
+  }
+
+  glm_vec2_copy(offset, b->parent_offset);
+
+  return true;
+}
+
+bool bullet_attach_to(BulletID id, BulletID parent, vec2 offset) {
+  Bullet *b = bullet_get(id);
+  if (b == NULL) {
+    return false;
+  }
+
+  b->parent = parent;
+  glm_vec2_copy(offset, b->parent_offset);
+
+  return true;
+}
+
+bool bullet_set_lifetime(BulletID id, int lifetime) {
+  Bullet *b = bullet_get(id);
+  if (b == NULL) {
+    return false;
   }
 
   b->lifetime = lifetime;
+
+  return true;
 }

@@ -1,5 +1,6 @@
 #include "sdl.h"
 #include "bullet.h"
+#include "bullet_system.h"
 #include "log.h"
 #include "spritesheet.h"
 #include <SDL3/SDL_error.h>
@@ -8,6 +9,9 @@
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3_image/SDL_image.h>
+
+extern size_t to_render[MAX_BULLETS_COUNT];
+extern size_t to_render_count;
 
 int sdl_init(const Configuration *config, SDL_Window **window,
              SDL_Renderer **renderer) {
@@ -55,14 +59,17 @@ int render_bullets(Bullet *bullets, SDL_Renderer *renderer,
 
   SDL_Texture *texture = spritesheet_texture(sprites);
 
-  for (int i = 0; i < MAX_BULLETS_COUNT; i++) {
-    if (bullets[i].lifetime == 0)
+  for (int i = 0; i < (int)to_render_count; i++) {
+
+    Bullet *b = bullets + to_render[i];
+    if (b->lifetime == 0) {
       continue;
+    }
 
-    const SpriteRegion *region = spritesheet_get(sprites, bullets[i].sprite);
+    const SpriteRegion *region = spritesheet_get(sprites, b->sprite);
 
-    SDL_FRect dest = {bullets[i].position[0], bullets[i].position[1],
-                      region->src.w, region->src.h};
+    SDL_FRect dest = {b->position[0], b->position[1], region->src.w,
+                      region->src.h};
 
     SDL_RenderTexture(renderer, texture, &(region->src), &dest);
   }

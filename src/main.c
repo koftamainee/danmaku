@@ -18,20 +18,23 @@
 #include <time.h>
 
 #include "bullet.h"
+#include "bullet_system.h"
 #include "config.h"
 #include "fps.h"
-#include "game.h"
+#include "lua/init.h"
+#include "lua/stage.h"
 #include "lua_api.h"
 #include "sdl.h"
 #include "spritesheet.h"
 
-#define CONFIG_FILE_PATH ("config.ini")
+#define CONFIG_FILE_PATH ("./config.ini")
 
-Bullet bullets[MAX_BULLETS_COUNT] = {0};
+extern size_t free_count;
+
+extern Bullet bullets[MAX_BULLETS_COUNT];
 SDL_Texture *bullet_sheet = NULL;
 
 int main(void) {
-
   Configuration config;
   if (parse_config(CONFIG_FILE_PATH, &config) != 0) {
     log_fatal("Failed to parse config");
@@ -48,24 +51,20 @@ int main(void) {
 
   lua_State *L = NULL;
 
-  if ((L = lua_init()) == NULL) {
+  if ((L = lua_system_init()) == NULL) {
     log_fatal("Failed to init Lua");
     return 1;
   }
 
-  if (luaL_dofile(L, "./mods/base/stage2.lua") != LUA_OK) {
-    log_error("Failed to load stage1.lua: %s", lua_tostring(L, -1));
-    lua_pop(L, 1);
+  log_info("Lua system initialized");
+
+  LuaStage stage;
+  if (!lua_stage_load(L, "./mods/base/stage1.lua", &stage)) {
+    log_fatal("Failed to load lua stage");
     return 1;
   }
 
-  GameplaySection gameplay_section;
-  if (load_section(L, "Stage1", &gameplay_section) != 0) {
-    log_fatal("Failed to load Stage1");
-    return 1;
-  }
-
-  int active_bullets = 0;
+  log_info("Lua Stage loaded");
 
   SDL_Event event;
   bool running = true;
@@ -81,21 +80,33 @@ int main(void) {
 
   log_info("SpriteSheet with bullets loaded");
 
+  bullet_system_init();
+
+  log_info("Bullet system initialized");
+
+  size_t frames = 0;
+
   while (running) {
+    frames++;
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_EVENT_QUIT) {
         running = false;
       }
     }
 
-    update_bullets(bullets, &active_bullets);
+    bullet_system_update();
 
-    update_section(L, &gameplay_section);
+    lua_stage_update(&stage);
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+
+    if (frames % 120 == 0) {
+      bullet_system_compact_render_list();
+    }
+
     render_bullets(bullets, renderer, bullets_sheet);
 
     SDL_RenderPresent(renderer);
@@ -103,7 +114,7 @@ int main(void) {
     bool is_fps_updated = false;
     double fps = frame_limit(&next_frame, &is_fps_updated);
     if (is_fps_updated) {
-      log_info("FPS: %lf", fps);
+      log_info("FPS: %lf, bullets: %ld", fps, MAX_BULLETS_COUNT - free_count);
     }
   }
 

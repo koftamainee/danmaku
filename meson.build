@@ -56,10 +56,14 @@ srcs = [
   'src/config.c',
   'src/sdl.c',
   'src/fps.c',
-  'src/game.c',
-  'src/lua_api.c',
   'src/bullet.c',
   'src/spritesheet.c',
+  'src/bullet_id.c',
+  'src/lua/env.c',
+  'src/lua/init.c',
+  'src/lua/stage.c',
+  'src/lua/wrappers.c',
+  'src/bullet_system.c',
 ]
 
 danmaku = executable(

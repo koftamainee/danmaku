@@ -17,12 +17,12 @@ return {
 		-- VELOCITY (polar coordinates):
 		-- speed           = 0                     -- number, px/frame: initial speed along angle
 		-- accel           = 0                     -- number, px/frame^2: acceleration along current angle
-		-- max_speed       = nil                   -- number, px/frame: maximum speed
 		-- min_speed       = nil                   -- number, px/frame: minimum speed
+		-- max_speed       = nil                   -- number, px/frame: maximum speed
 		--
 		-- ANGLE & ROTATION:
 		-- angle           = 0                     -- number, radians: initial movement angle
-		-- angle_mode      = engine.angle.absolute -- absolute | relative | player: how angle is interpreted
+		-- angle_type      = engine.angle.absolute -- absolute | relative | player: how angle is interpreted
 		-- angular_vel     = 0                     -- number, radians/frame: rotational velocity
 		-- angular_accel   = 0                     -- number, radians/frame^2: rotational acceleration
 		-- min_angular_vel = nil                   -- number, radians/frame: minimum angular velocity
@@ -81,9 +81,9 @@ return {
 		b:aim() -- shortcut for player-relative aiming
 
 		-- Parent/child management
-		b:set_local_offset({ x = 10, y = 0 }) -- offset relative to parent (if attached)
+		b:set_parent_offset({ x = 10, y = 0 }) -- offset relative to parent (if attached)
 		b:attach_to(a) -- attach to parent
-		b:attach_to(nil) -- detach from parent
+		b:detach() -- detach from parent
 		b:attach_to(a, { x = 5, y = 5 }) -- attach to another parent with offset
 
 		-- Lifetime
@@ -97,6 +97,7 @@ return {
 		-- engine.wait(0) == engine.yield()
 
 		-- EXAMPLE 1: Simple radial burst
+		print("Got here")
 		local center_x, center_y = 300, 200
 		local bullet_count = 16
 		local speed = 2.5
@@ -177,7 +178,7 @@ return {
 				parent = parent,
 				parent_offset = { x = offset_x, y = offset_y },
 			})
-			yield() -- Spawn one-by-one
+			engine.yield() -- Spawn one-by-one
 		end
 
 		engine.wait(120)

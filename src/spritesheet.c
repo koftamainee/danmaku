@@ -38,7 +38,6 @@ static char *read_file(const char *path) {
 SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path) {
   SpriteSheet *spritesheet = calloc(1, sizeof(SpriteSheet));
   if (spritesheet == NULL) {
-    // TODO: maybe die
     log_fatal("Out of memory");
     return NULL;
   }
@@ -49,6 +48,8 @@ SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path) {
     free(spritesheet);
     return NULL;
   }
+
+  // TODO: validate JSON via schema
 
   cJSON *root = cJSON_Parse(text);
   free(text);
