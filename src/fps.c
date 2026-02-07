@@ -1,40 +1,43 @@
+// Framerate limiter to get exactly 60 FPS
+//
+// Reference:
+// https://github.com/taisei-project/taisei/blob/master/src/framerate.c
+
 #include "fps.h"
 #include <SDL3/SDL_timer.h>
+#include <string.h>
 
-double frame_limit(uint64_t *next_frame_time, bool *fps_updated) {
-  const int target_fps = 60;
+void fpscounter_reset(FPSCounter *fps) {
   const uint64_t ns_per_sec = 1000000000ULL;
-  const uint64_t frame_time_ns = ns_per_sec / target_fps;
+  const uint64_t frametime = ns_per_sec / FPS;
 
-  static uint64_t last_fps_time = 0;
-  static uint32_t frame_count = 0;
-  static double fps = 0.0;
-
-  uint64_t now = SDL_GetTicksNS();
-  *fps_updated = 0;
-
-  if (*next_frame_time == 0) {
-    *next_frame_time = now + frame_time_ns;
-    last_fps_time = now;
-    return fps;
+  for (int i = 0; i < FPS_SAMPLE_COUNT; i++) {
+    fps->frametimes[i] = frametime;
   }
 
-  if (now < *next_frame_time) {
-    SDL_DelayPrecise(*next_frame_time - now);
-    *next_frame_time += frame_time_ns;
-  } else {
-    *next_frame_time = now + frame_time_ns;
+  fps->fps = (double)ns_per_sec / (double)frametime;
+  fps->frametime = frametime;
+  fps->last_update_time = SDL_GetTicksNS();
+}
+
+void fpscounter_update(FPSCounter *fps) {
+  const int log_size = FPS_SAMPLE_COUNT;
+  const uint64_t ns_per_sec = 1000000000ULL;
+
+  uint64_t update_time = SDL_GetTicksNS();
+  uint64_t frametime = update_time - fps->last_update_time;
+
+  memmove(fps->frametimes, fps->frametimes + 1,
+          (log_size - 1) * sizeof(uint64_t));
+  fps->frametimes[log_size - 1] = frametime;
+
+  uint64_t avg = 0;
+  for (int i = 0; i < log_size; i++) {
+    avg += fps->frametimes[i];
   }
 
-  frame_count++;
-
-  uint64_t elapsed = now - last_fps_time;
-  if (elapsed >= ns_per_sec) {
-    fps = (double)frame_count * ns_per_sec / (double)elapsed;
-    frame_count = 0;
-    last_fps_time = now;
-    *fps_updated = true;
-  }
-
-  return fps;
+  double avg_frametime = (double)avg / (double)log_size;
+  fps->fps = (double)ns_per_sec / avg_frametime;
+  fps->frametime = avg / log_size;
+  fps->last_update_time = update_time;
 }

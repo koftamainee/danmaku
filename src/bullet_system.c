@@ -1,6 +1,7 @@
 #include "bullet_system.h"
 #include "bullet.h"
 #include "bullet_id.h"
+#include "log.h"
 #include <cglm/vec2.h>
 #include <math.h>
 #include <string.h>
@@ -132,11 +133,14 @@ void bullet_system_update(void) {
       b->angle += b->angular_vel;
       b->position[0] += cosf(b->angle) * b->speed;
       b->position[1] += sinf(b->angle) * b->speed;
+
       if (bullet_outside_screen(b)) {
         kill_bullet_by_id((size_t)i);
         continue;
       }
     }
+
+    // Lifetime check and bullet killing for ALL bullets
     if (b->lifetime > 0) {
       b->lifetime--;
     }
@@ -181,23 +185,24 @@ void bullet_system_update(void) {
         b->parent = BULLET_ID_NULL;
       }
 
+      // Only check for outside the screen after position updated
+      // lifetime already checked in previous loop
       if (bullet_outside_screen(b)) {
         kill_bullet_by_id((size_t)i);
         continue;
       }
-      if (b->lifetime > 0) {
-        b->lifetime--;
-      }
-      if (b->lifetime == 0) {
-        kill_bullet_by_id((size_t)i);
-      }
     }
   }
 }
+
 void bullet_system_compact_render_list(void) {
   size_t write = 0;
 
-  for (size_t read = 0; read < to_render_count; read++) {
+  if (to_render_count > MAX_BULLETS_COUNT) {
+    log_error("to_render_count > MAX_BULLETS_COUNT. SHOULD BE UNREACHABLE");
+  }
+
+  for (int read = 0; read < (int)to_render_count; read++) {
     size_t idx = to_render[read];
 
     if (bullets[idx].lifetime != 0) {

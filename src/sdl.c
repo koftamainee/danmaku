@@ -13,6 +13,9 @@
 extern size_t to_render[MAX_BULLETS_COUNT];
 extern size_t to_render_count;
 
+#define GAME_WIDTH (640)
+#define GAME_HEIGHT (480)
+
 int sdl_init(const Configuration *config, SDL_Window **window,
              SDL_Renderer **renderer) {
   if (config == NULL) {
@@ -24,8 +27,6 @@ int sdl_init(const Configuration *config, SDL_Window **window,
     return 1;
   }
 
-  log_info("SDL is initilized");
-
   bool is_window_and_renderer_created = SDL_CreateWindowAndRenderer(
       "danmaku", config->window_width, config->window_height,
       SDL_WINDOW_RESIZABLE, window, renderer);
@@ -35,10 +36,13 @@ int sdl_init(const Configuration *config, SDL_Window **window,
     return 1;
   }
 
-  SDL_SetRenderLogicalPresentation(*renderer, 640, 480,
+  log_info("SDL window and renderer created. Window size is set to %dx%d",
+           config->window_width, config->window_height);
+
+  SDL_SetRenderLogicalPresentation(*renderer, GAME_WIDTH, GAME_HEIGHT,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-  log_info("SDL3 window and renderer initialized");
+  log_info("Game native resolution is set to %dx%d", GAME_WIDTH, GAME_HEIGHT);
 
   if (config->fullscreen) {
     SDL_SetWindowFullscreen(*window, true);
@@ -58,6 +62,10 @@ int render_bullets(Bullet *bullets, SDL_Renderer *renderer,
     return 1;
 
   SDL_Texture *texture = spritesheet_texture(sprites);
+
+  if (to_render_count > MAX_BULLETS_COUNT) {
+    log_error("to_render_count > MAX_BULLETS_COUNT. SHOULD BE UNREACHABLE");
+  }
 
   for (int i = 0; i < (int)to_render_count; i++) {
 
