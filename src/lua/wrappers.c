@@ -1,10 +1,20 @@
 #include "lua/wrappers.h"
-#include "bullet.h"
-#include "bullet_id.h"
-#include "bullet_system.h"
+#include "engine/bullet/bullet.h"
+#include "engine/bullet/bullet_id.h"
+#include "engine/bullet/bullet_system.h"
 #include <lauxlib.h>
 #include <lua.h>
 #include <string.h>
+
+static const char *BULLET_SYSTEM_KEY = "bullet_system_ptr";
+
+BulletSystem *lua_get_bullet_system(lua_State *L) {
+  lua_pushlightuserdata(L, (void *)BULLET_SYSTEM_KEY);
+  lua_gettable(L, LUA_REGISTRYINDEX);
+  BulletSystem *sys = lua_touserdata(L, -1);
+  lua_pop(L, 1);
+  return sys;
+}
 
 static inline LuaBullet *check_lua_bullet(lua_State *L, int expected_args,
                                           const char *func_name) {
@@ -22,10 +32,15 @@ static inline LuaBullet *check_lua_bullet(lua_State *L, int expected_args,
 }
 
 int l_bullet_set_speed(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 2, "set_speed()");
   float speed = (float)luaL_checknumber(L, 2);
 
-  if (!bullet_set_speed(b->id, speed)) {
+  if (!bullet_set_speed(sys, b->id, speed)) {
     return luaL_error(L, "set_speed(): failed, bullet may be dead");
   }
 
@@ -33,10 +48,15 @@ int l_bullet_set_speed(lua_State *L) {
 }
 
 int l_bullet_set_accel(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 2, "set_accel()");
   float accel = (float)luaL_checknumber(L, 2);
 
-  if (!bullet_set_accel(b->id, accel)) {
+  if (!bullet_set_accel(sys, b->id, accel)) {
     return luaL_error(L, "set_accel(): failed, bullet may be dead");
   }
 
@@ -44,92 +64,174 @@ int l_bullet_set_accel(lua_State *L) {
 }
 
 int l_bullet_set_min_speed(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 2, "set_min_speed()");
   float min_speed = (float)luaL_checknumber(L, 2);
 
-  if (!bullet_set_min_speed(b->id, min_speed)) {
+  if (!bullet_set_min_speed(sys, b->id, min_speed)) {
     return luaL_error(L, "set_min_speed(): failed, bullet may be dead");
   }
+
   return 0;
 }
 
 int l_bullet_set_max_speed(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 2, "set_max_speed()");
   float max_speed = (float)luaL_checknumber(L, 2);
 
-  if (!bullet_set_max_speed(b->id, max_speed)) {
+  if (!bullet_set_max_speed(sys, b->id, max_speed)) {
     return luaL_error(L, "set_max_speed(): failed, bullet may be dead");
   }
+
   return 0;
 }
 
 int l_bullet_set_speed_limits(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 3, "set_speed_limits()");
   float min_speed = (float)luaL_checknumber(L, 2);
   float max_speed = (float)luaL_checknumber(L, 3);
 
-  if (!bullet_set_speed_limits(b->id, min_speed, max_speed)) {
+  if (!bullet_set_speed_limits(sys, b->id, min_speed, max_speed)) {
     return luaL_error(L, "set_speed_limits(): failed, bullet may be dead");
   }
+
   return 0;
 }
 
 int l_bullet_set_angular_vel(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 2, "set_angular_vel()");
   float angular_vel = (float)luaL_checknumber(L, 2);
 
-  if (!bullet_set_angular_vel(b->id, angular_vel)) {
+  if (!bullet_set_angular_vel(sys, b->id, angular_vel)) {
     return luaL_error(L, "set_angular_vel(): failed, bullet may be dead");
   }
+
   return 0;
 }
 
 int l_bullet_set_angular_accel(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 2, "set_angular_accel()");
   float angular_accel = (float)luaL_checknumber(L, 2);
 
-  if (!bullet_set_angular_accel(b->id, angular_accel)) {
+  if (!bullet_set_angular_accel(sys, b->id, angular_accel)) {
     return luaL_error(L, "set_angular_accel(): failed, bullet may be dead");
   }
+
   return 0;
 }
 
 int l_bullet_set_min_angular_vel(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 2, "set_min_angular_vel()");
   float min_angular_vel = (float)luaL_checknumber(L, 2);
 
-  if (!bullet_set_min_angular_vel(b->id, min_angular_vel)) {
+  if (!bullet_set_min_angular_vel(sys, b->id, min_angular_vel)) {
     return luaL_error(L, "set_min_angular_vel(): failed, bullet may be dead");
   }
+
   return 0;
 }
 
 int l_bullet_set_max_angular_vel(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 2, "set_max_angular_vel()");
   float max_angular_vel = (float)luaL_checknumber(L, 2);
 
-  if (!bullet_set_max_angular_vel(b->id, max_angular_vel)) {
+  if (!bullet_set_max_angular_vel(sys, b->id, max_angular_vel)) {
     return luaL_error(L, "set_max_angular_vel(): failed, bullet may be dead");
   }
+
   return 0;
 }
 
 int l_bullet_set_angular_vel_limits(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 3, "set_angular_vel_limits()");
   float min_angular_vel = (float)luaL_checknumber(L, 2);
   float max_angular_vel = (float)luaL_checknumber(L, 3);
 
-  if (!bullet_set_angular_vel_limits(b->id, min_angular_vel, max_angular_vel)) {
+  if (!bullet_set_angular_vel_limits(sys, b->id, min_angular_vel,
+                                     max_angular_vel)) {
     return luaL_error(L,
                       "set_angular_vel_limits(): failed, bullet may be dead");
   }
+
   return 0;
 }
-int l_bullet_set_angle(lua_State *L) {}
 
-int l_bullet_aim(lua_State *L) {}
+int l_bullet_set_angle(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
+  LuaBullet *b = check_lua_bullet(L, 2, "set_angle()");
+  float angle = (float)luaL_checknumber(L, 2);
+
+  if (!bullet_set_angle(sys, b->id, angle)) {
+    return luaL_error(L, "set_angle(): failed, bullet may be dead");
+  }
+
+  return 0;
+}
+
+int l_bullet_aim(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
+  LuaBullet *b = check_lua_bullet(L, 1, "aim()");
+
+  if (!bullet_aim(sys, b->id)) {
+    return luaL_error(L, "aim(): failed, bullet may be dead");
+  }
+
+  return 0;
+}
 
 int l_bullet_set_parent_offset(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 2, "set_parent_offset()");
 
   luaL_checktype(L, 2, LUA_TTABLE);
@@ -152,7 +254,7 @@ int l_bullet_set_parent_offset(lua_State *L) {
   offset[1] = (float)luaL_checknumber(L, -1);
   lua_pop(L, 1);
 
-  if (!bullet_set_parent_offset(b->id, offset)) {
+  if (!bullet_set_parent_offset(sys, b->id, offset)) {
     return luaL_error(L, "set_parent_offset(): failed, bullet may be dead");
   }
 
@@ -160,6 +262,11 @@ int l_bullet_set_parent_offset(lua_State *L) {
 }
 
 int l_bullet_attach_to(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = (LuaBullet *)luaL_checkudata(L, 1, "Bullet");
   if (b == NULL) {
     return luaL_error(L, "attach_to(): 'parent' must be a bullet handle");
@@ -180,29 +287,42 @@ int l_bullet_attach_to(lua_State *L) {
     offset[1] = (float)luaL_checknumber(L, 4);
   }
 
-  if (!bullet_attach_to(b->id, parent_id, offset)) {
+  if (!bullet_attach_to(sys, b->id, parent_id, offset)) {
     return luaL_error(L, "attach_to(): failed, bullet or parent may be dead");
   }
+
   return 0;
 }
 
 int l_bullet_detach(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 1, "detach()");
   vec2 offset = {0.0f, 0.0f};
 
-  if (!bullet_attach_to(b->id, BULLET_ID_NULL, offset)) {
+  if (!bullet_attach_to(sys, b->id, BULLET_ID_NULL, offset)) {
     return luaL_error(L, "detach(): failed, bullet may be dead");
   }
+
   return 0;
 }
 
 int l_bullet_set_lifetime(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   LuaBullet *b = check_lua_bullet(L, 2, "set_lifetime()");
   int lifetime = (int)luaL_checkinteger(L, 2);
 
-  if (!bullet_set_lifetime(b->id, lifetime)) {
+  if (!bullet_set_lifetime(sys, b->id, lifetime)) {
     return luaL_error(L, "set_lifetime(): failed, bullet may be dead");
   }
+
   return 0;
 }
 
@@ -234,6 +354,11 @@ int l_engine_yield(lua_State *L) {
 }
 
 int l_spawn_bullet(lua_State *L) {
+  BulletSystem *sys = lua_get_bullet_system(L);
+  if (!sys) {
+    return luaL_error(L, "Bullet system not initialized");
+  }
+
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "spawn_bullet() expects exactly 1 argument, got %d",
                       lua_gettop(L));
@@ -251,8 +376,8 @@ int l_spawn_bullet(lua_State *L) {
 
   lua_getfield(L, 1, "sprite");
   if (!lua_isstring(L, -1)) {
-    return luaL_error(L, "spawn_bullet(): 'sprite' field is required "
-                         "and must be a string");
+    return luaL_error(
+        L, "spawn_bullet(): 'sprite' field is required and must be a string");
   }
   const char *sprite = lua_tostring(L, -1);
   strncpy(init.sprite, sprite, sizeof(init.sprite) - 1);
@@ -275,8 +400,8 @@ int l_spawn_bullet(lua_State *L) {
   lua_getfield(L, 1, "y");
   if (!has_parent) {
     if (!lua_isnumber(L, -2) || !lua_isnumber(L, -1)) {
-      return luaL_error(L, "spawn_bullet(): 'x' and 'y' are required "
-                           "when no parent is set");
+      return luaL_error(
+          L, "spawn_bullet(): 'x' and 'y' are required when no parent is set");
     }
   }
   init.position[0] = lua_isnumber(L, -2) ? (float)lua_tonumber(L, -2) : 0.0f;
@@ -303,14 +428,10 @@ int l_spawn_bullet(lua_State *L) {
   init.angle = lua_isnumber(L, -1) ? (float)lua_tonumber(L, -1) : 0.0f;
   lua_pop(L, 1);
 
-  // TODO: Handle angle_type (absolute/relative/player)
   lua_getfield(L, 1, "angle_type");
   if (lua_isinteger(L, -1)) {
     int angle_type = (int)lua_tointeger(L, -1);
-    // You'll need to implement angle conversion based on angle_type
-    // ENGINE_ANGLE_ABSOLUTE: use as-is
-    // ENGINE_ANGLE_RELATIVE: add to some base angle
-    // ENGINE_ANGLE_PLAYER: calculate angle to player
+    (void)angle_type;
   }
   lua_pop(L, 1);
 
@@ -352,7 +473,7 @@ int l_spawn_bullet(lua_State *L) {
   }
   lua_pop(L, 1);
 
-  BulletID id = spawn_bullet(&init);
+  BulletID id = bullet_system_spawn(sys, &init);
 
   if (bullet_id_is_null(id)) {
     lua_pushnil(L);

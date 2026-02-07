@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ENGINE_BULLET_ID_H
+#define ENGINE_BULLET_ID_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -13,3 +14,5 @@ typedef struct {
 
 bool bullet_id_equal(BulletID first, BulletID second);
 bool bullet_id_is_null(BulletID id);
+
+#endif

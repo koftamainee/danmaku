@@ -1,7 +1,10 @@
-#pragma once
+#ifndef LUA_WRAPPERS_H
+#define LUA_WRAPPERS_H
 
-#include "bullet_id.h"
+#include "engine/bullet/bullet_id.h"
 #include <lua.h>
+
+typedef struct BulletSystem BulletSystem;
 
 typedef struct {
   BulletID id;
@@ -12,6 +15,8 @@ typedef enum {
   ENGINE_ANGLE_RELATIVE = 1,
   ENGINE_ANGLE_PLAYER = 2,
 } EngineAngle;
+
+BulletSystem *lua_get_bullet_system(lua_State *L);
 
 int l_bullet_set_speed(lua_State *L);
 int l_bullet_set_accel(lua_State *L);
@@ -38,3 +43,5 @@ int l_spawn_bullet(lua_State *L);
 int l_engine_time(lua_State *L);
 int l_engine_wait(lua_State *L);
 int l_engine_yield(lua_State *L);
+
+#endif

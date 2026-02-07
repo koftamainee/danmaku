@@ -25,9 +25,20 @@ void log_log(log_level level, const char *file, int line, const char *fmt, ...);
 void vlog_log(log_level level, const char *file, int line, const char *fmt,
               va_list ap);
 
+#ifndef NDEBUG
+
 #define log_trace(...) log_log(LOG_TRACE, __FILE__, __LINE__, __VA_ARGS__)
 #define log_debug(...) log_log(LOG_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
 #define log_info(...) log_log(LOG_INFO, __FILE__, __LINE__, __VA_ARGS__)
+
+#else
+
+#define log_trace(...) ((void)0)
+#define log_debug(...) ((void)0)
+#define log_info(...) ((void)0)
+
+#endif
+
 #define log_warn(...) log_log(LOG_WARN, __FILE__, __LINE__, __VA_ARGS__)
 #define log_error(...) log_log(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 #define log_fatal(...) log_log(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)

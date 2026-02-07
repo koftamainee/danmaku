@@ -134,6 +134,8 @@ SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path) {
 
   cJSON_Delete(root);
 
+  log_info("Spritesheet from %s loaded", json_path);
+
   return spritesheet;
 }
 
@@ -153,7 +155,7 @@ SDL_Texture *spritesheet_texture(const SpriteSheet *sheet) {
   return sheet->texture;
 }
 
-void spritesheet_free(SpriteSheet *sheet) {
+void spritesheet_destroy(SpriteSheet *sheet) {
   SpriteEntry *e = NULL, *tmp = NULL;
 
   HASH_ITER(hh, sheet->sprites, e, tmp) {

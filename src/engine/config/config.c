@@ -1,16 +1,15 @@
 #include "config.h"
-#include "log.h"
 #include <ini.h>
+#include <log.h>
 #include <memory.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define DEFAULT_WINDOW_WIDTH (1280)
-#define DEFAULT_WINDOW_HEIGHT (960)
+#define DEFAULT_WINDOW_WIDTH 1280
+#define DEFAULT_WINDOW_HEIGHT 960
 
 static int config_parser_handler(void *user, const char *section,
                                  const char *name, const char *value) {
-
   Configuration *pconfig = (Configuration *)user;
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0

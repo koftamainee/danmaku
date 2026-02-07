@@ -23,4 +23,4 @@ const SpriteRegion *spritesheet_get(const SpriteSheet *spritesheet,
 
 SDL_Texture *spritesheet_texture(const SpriteSheet *spritesheet);
 
-void spritesheet_free(SpriteSheet *spritesheet);
+void spritesheet_destroy(SpriteSheet *spritesheet);

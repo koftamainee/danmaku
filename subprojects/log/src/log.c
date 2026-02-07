@@ -26,6 +26,7 @@ static const char *level_color[] = {"\x1b[36m", "\x1b[34m", "\x1b[32m",
 
 static void log_to_stream(FILE *stream, log_level level, const char *file,
                           int line, const char *fmt, va_list ap) {
+#ifndef NDEBUG
   char time_buf[16];
   time_t t = time(NULL);
   strftime(time_buf, sizeof(time_buf), "%H:%M:%S", localtime(&t));
@@ -37,9 +38,20 @@ static void log_to_stream(FILE *stream, log_level level, const char *file,
     fprintf(stream, "%s %-5s %s:%d: ", time_buf, level_string[level], file,
             line);
   }
+#else
+  (void)file;
+  (void)line;
+
+  if (stream == stdout || stream == stderr) {
+    fprintf(stream, "%s%-5s%s ", level_color[level], level_string[level],
+            COLOR_RESET);
+  } else {
+    fprintf(stream, "%-5s ", level_string[level]);
+  }
+#endif
 
   vfprintf(stream, fmt, ap);
-  fprintf(stream, "\n");
+  fputc('\n', stream);
 }
 
 void log_set_level(log_level level) { L.level = level; }
@@ -97,7 +109,16 @@ void vlog_log(log_level level, const char *file, int line, const char *fmt,
   }
 }
 
-int logger_start(void) { return log_add_fp(stderr, LOG_TRACE); }
+int logger_start(void) {
+  int rc = log_add_fp(stderr, LOG_TRACE);
+  if (rc != 0) {
+    return rc;
+  }
+
+  log_info("Logger started");
+
+  return 0;
+}
 
 void logger_stop(void) {
   for (size_t i = 0; i < L.loggers_count; ++i) {

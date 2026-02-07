@@ -53,6 +53,8 @@ bool lua_stage_load(lua_State *L, const char *path, LuaStage *stage) {
   stage->wait_frames = 0;
   stage->finished = false;
 
+  log_info("%s lua stage loaded", path);
+
   return true;
 }
 

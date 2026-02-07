@@ -4,6 +4,7 @@
 // https://github.com/taisei-project/taisei/blob/master/src/framerate.c
 
 #include "fps.h"
+#include "log.h"
 #include <SDL3/SDL_timer.h>
 #include <string.h>
 
@@ -18,6 +19,8 @@ void fpscounter_reset(FPSCounter *fps) {
   fps->fps = (double)ns_per_sec / (double)frametime;
   fps->frametime = frametime;
   fps->last_update_time = SDL_GetTicksNS();
+
+  log_info("FPS counter reseted and ready to use");
 }
 
 void fpscounter_update(FPSCounter *fps) {
@@ -28,7 +31,7 @@ void fpscounter_update(FPSCounter *fps) {
   uint64_t frametime = update_time - fps->last_update_time;
 
   memmove(fps->frametimes, fps->frametimes + 1,
-          (log_size - 1) * sizeof(uint64_t));
+          (size_t)(log_size - 1) * sizeof(uint64_t));
   fps->frametimes[log_size - 1] = frametime;
 
   uint64_t avg = 0;
@@ -38,6 +41,6 @@ void fpscounter_update(FPSCounter *fps) {
 
   double avg_frametime = (double)avg / (double)log_size;
   fps->fps = (double)ns_per_sec / avg_frametime;
-  fps->frametime = avg / log_size;
+  fps->frametime = avg / (uint64_t)log_size;
   fps->last_update_time = update_time;
 }

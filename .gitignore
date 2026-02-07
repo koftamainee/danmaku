@@ -1,4 +1,9 @@
 build/
 .cache/
+
 subprojects/**/*/
+
 !subprojects/*.wrap
+
+!subprojects/log/
+!subprojects/log/**

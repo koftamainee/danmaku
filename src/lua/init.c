@@ -1,11 +1,18 @@
 #include "lua/init.h"
-#include "log.h"
+#include "engine/bullet/bullet_system.h"
 #include "lua/env.h"
 #include <lauxlib.h>
-#include <lua.h>
+#include <log.h>
 #include <lualib.h>
 
-lua_State *lua_system_init(void) {
+static const char *BULLET_SYSTEM_KEY = "bullet_system_ptr";
+
+lua_State *lua_system_init(BulletSystem *bullet_system) {
+  if (!bullet_system) {
+    log_error("Cannot init Lua without bullet system");
+    return NULL;
+  }
+
   lua_State *L = luaL_newstate();
   if (L == NULL) {
     log_error("Failed to init Lua state");
@@ -14,13 +21,19 @@ lua_State *lua_system_init(void) {
 
   luaL_openlibs(L);
 
+  lua_pushlightuserdata(L, (void *)BULLET_SYSTEM_KEY);
+  lua_pushlightuserdata(L, bullet_system);
+  lua_settable(L, LUA_REGISTRYINDEX);
+
   lua_register_bullet(L);
 
+  log_info("Lua system initialized");
   return L;
 }
 
-void lua_system_free(lua_State *L) {
+void lua_system_destroy(lua_State *L) {
   if (L != NULL) {
     lua_close(L);
+    log_info("Lua system destroyed");
   }
 }
