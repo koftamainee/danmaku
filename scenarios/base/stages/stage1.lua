@@ -61,7 +61,7 @@ local function SpinningCross(engine, x, y)
 				lifetime = BASE_LIFETIME,
 			})
 		end
-		engine.yield()
+		engine.wait(1)
 	end
 end
 
@@ -236,7 +236,6 @@ return {
 
 	run = function(engine)
 		while true do
-			-- Shuffle patterns
 			for i = #PATTERNS, 2, -1 do
 				local j = math.random(i)
 				PATTERNS[i], PATTERNS[j] = PATTERNS[j], PATTERNS[i]
