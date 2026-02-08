@@ -1,4 +1,4 @@
-local BASE_LIFETIME = -1
+local BASE_LIFETIME = 1000
 
 local function BloomingFlower(engine, x, y)
 	local base_angle = 0
