@@ -5,20 +5,18 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
+#include <assert.h>
 #include <log.h>
 #include <stdlib.h>
 
 #define GAME_WIDTH 640
 #define GAME_HEIGHT 480
 
-Platform *platform_init(const Configuration *config) {
-  if (config == NULL) {
-    log_error("Cannot init platform: config is NULL");
-    return NULL;
-  }
+Platform *platform_create(const Configuration *config) {
+  assert(config != NULL);
 
   Platform *platform = calloc(1, sizeof(Platform));
-  if (!platform) {
+  if (platform == NULL) {
     log_error("Failed to allocate platform");
     return NULL;
   }
@@ -58,7 +56,7 @@ Platform *platform_init(const Configuration *config) {
 
   platform->running = true;
 
-  log_info("SDL platform is initialized");
+  log_info("SDL platform is created");
 
   return platform;
 }
@@ -82,13 +80,12 @@ void platform_destroy(Platform *platform) {
 }
 
 bool platform_is_running(const Platform *platform) {
-  return platform != NULL && platform->running;
+  assert(platform != NULL);
+  return platform->running;
 }
 
 void platform_poll_events(Platform *platform) {
-  if (platform == NULL) {
-    return;
-  }
+  assert(platform != NULL);
 
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
@@ -99,22 +96,22 @@ void platform_poll_events(Platform *platform) {
 }
 
 SDL_Renderer *platform_get_renderer(Platform *platform) {
-  return platform != NULL ? platform->renderer : NULL;
+  assert(platform != NULL);
+
+  return platform->renderer;
 }
 
 void platform_clear(Platform *platform) {
-  if (platform == NULL || platform->renderer == NULL) {
-    return;
-  }
+  assert(platform != NULL);
+  assert(platform->renderer != NULL);
 
   SDL_SetRenderDrawColor(platform->renderer, 0, 0, 0, 255);
   SDL_RenderClear(platform->renderer);
 }
 
 void platform_present(Platform *platform) {
-  if (platform == NULL || platform->renderer == NULL) {
-    return;
-  }
+  assert(platform != NULL);
+  assert(platform->renderer != NULL);
 
   SDL_RenderPresent(platform->renderer);
 }

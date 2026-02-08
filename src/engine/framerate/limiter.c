@@ -5,6 +5,7 @@
 
 #include "limiter.h"
 #include <SDL3/SDL_timer.h>
+#include <assert.h>
 #include <log.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,7 +24,7 @@ struct FPSLimiter {
 
 FPSLimiter *fpslimiter_init(void) {
   FPSLimiter *fps = calloc(1, sizeof(FPSLimiter));
-  if (!fps)
+  if (fps == NULL)
     return NULL;
 
   fps->frame_time_ns = NS_PER_SEC / FPS;
@@ -45,6 +46,8 @@ FPSLimiter *fpslimiter_init(void) {
 void fpslimiter_destroy(FPSLimiter *fps) { free(fps); }
 
 int fpslimiter_begin_frame(FPSLimiter *fps) {
+  assert(fps != NULL);
+
   uint64_t now = SDL_GetTicksNS();
   uint64_t frame_time = now - fps->last_time;
 
@@ -71,6 +74,8 @@ int fpslimiter_begin_frame(FPSLimiter *fps) {
 }
 
 void fpslimiter_end_frame(FPSLimiter *fps) {
+  assert(fps != NULL);
+
   if (fps->accumulator < fps->frame_time_ns) {
     uint64_t sleep_time = fps->frame_time_ns - fps->accumulator;
     if (sleep_time > 500000ULL)
@@ -93,13 +98,16 @@ void fpslimiter_end_frame(FPSLimiter *fps) {
 }
 
 double fpslimiter_get_fps(const FPSLimiter *fps) {
-  return fps ? fps->fps : 0.0;
+  assert(fps != NULL);
+  return fps->fps;
 }
 
 uint64_t fpslimiter_get_accumulator_ns(const FPSLimiter *fps) {
-  return fps ? fps->accumulator : 0ULL;
+  assert(fps != NULL);
+  return fps->accumulator;
 }
 
 double fpslimiter_get_accumulator_ms(const FPSLimiter *fps) {
-  return fps ? (double)fps->accumulator / 1000000.0 : 0.0;
+  assert(fps != NULL);
+  return (double)fps->accumulator / 1000000.0;
 }

@@ -3,7 +3,7 @@
 #include "engine/framerate/limiter.h"
 #include "engine/render/bullet_renderer.h"
 #include "engine/render/spritesheet.h"
-#include "lua/init.h"
+#include "lua/lua_system.h"
 #include "lua/stage.h"
 #include "platform/sdl.h"
 #include <log.h>
@@ -38,22 +38,22 @@ int main(void) {
     return 1;
   }
 
-  platform = platform_init(&config);
+  platform = platform_create(&config);
   if (platform == NULL) {
     log_fatal("SDL platform init failed");
     return 1;
   }
 
-  bullet_sys = bullet_system_init(MAX_BULLETS_COUNT);
+  bullet_sys = bullet_system_create(MAX_BULLETS_COUNT);
   if (bullet_sys == NULL) {
     log_fatal("Failed to create bullet system");
     platform_destroy(platform);
     return 1;
   }
 
-  L = lua_system_init(bullet_sys);
+  L = lua_system_create(bullet_sys);
   if (L == NULL) {
-    log_fatal("Failed to init Lua");
+    log_fatal("Failed to create Lua system");
     bullet_system_destroy(bullet_sys);
     platform_destroy(platform);
     return 1;

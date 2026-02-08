@@ -1,4 +1,5 @@
 #include "config.h"
+#include <assert.h>
 #include <ini.h>
 #include <log.h>
 #include <memory.h>
@@ -10,6 +11,11 @@
 
 static int config_parser_handler(void *user, const char *section,
                                  const char *name, const char *value) {
+  assert(user != NULL);
+  assert(section != NULL);
+  assert(name != NULL);
+  assert(value != NULL);
+
   Configuration *pconfig = (Configuration *)user;
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
@@ -32,9 +38,7 @@ static int config_parser_handler(void *user, const char *section,
 }
 
 int parse_config(const char *config_file_path, Configuration *config) {
-  if (config == NULL) {
-    return 1;
-  }
+  assert(config != NULL);
 
   config->window_width = DEFAULT_WINDOW_WIDTH;
   config->window_height = DEFAULT_WINDOW_HEIGHT;

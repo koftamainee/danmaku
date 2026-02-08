@@ -1,6 +1,7 @@
 #include "spritesheet.h"
 #include "log.h"
 #include <SDL3_image/SDL_image.h>
+#include <assert.h>
 #include <cjson/cJSON.h>
 #include <libgen.h>
 #include <stdlib.h>
@@ -15,16 +16,24 @@ struct SpriteSheet {
 };
 
 static char *read_file(const char *path) {
+  assert(path != NULL);
+
   FILE *f = fopen(path, "rb");
-  if (!f)
+  if (f == NULL) {
+    log_error("Failed to open %s", path);
     return NULL;
+  }
 
   fseek(f, 0, SEEK_END);
   long len = ftell(f);
+  if (len == 0) {
+    log_error("File %s is empty", path);
+  }
   fseek(f, 0, SEEK_SET);
 
   char *buf = malloc((size_t)len + 1);
-  if (!buf) {
+  if (buf == NULL) {
+    log_error("Failed to allocate memory for %s content", path);
     fclose(f);
     return NULL;
   }
@@ -36,9 +45,12 @@ static char *read_file(const char *path) {
 }
 
 SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path) {
+  assert(json_path != NULL);
+  assert(renderer != NULL);
+
   SpriteSheet *spritesheet = calloc(1, sizeof(SpriteSheet));
   if (spritesheet == NULL) {
-    log_fatal("Out of memory");
+    log_error("Failed to allocate memory for spritesheet");
     return NULL;
   }
 
@@ -55,6 +67,7 @@ SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path) {
   free(text);
   if (root == NULL) {
     log_error("Failed to parse JSON: %s", json_path);
+    free(spritesheet);
     return NULL;
   }
 
@@ -105,7 +118,7 @@ SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path) {
     if (!cJSON_IsString(name_item) || !cJSON_IsNumber(x_item) ||
         !cJSON_IsNumber(y_item) || !cJSON_IsNumber(w_item) ||
         !cJSON_IsNumber(h_item)) {
-      log_warn("Skipping invalid frame");
+      log_warn("Skipping invalid sprite");
       continue;
     }
 
@@ -141,6 +154,9 @@ SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path) {
 
 const SpriteRegion *spritesheet_get(const SpriteSheet *spritesheet,
                                     const char *name) {
+  assert(spritesheet != NULL);
+  assert(name != NULL);
+
   SpriteEntry *entry = NULL;
   if (spritesheet == NULL) {
     return NULL;
@@ -152,10 +168,15 @@ const SpriteRegion *spritesheet_get(const SpriteSheet *spritesheet,
 }
 
 SDL_Texture *spritesheet_texture(const SpriteSheet *sheet) {
+  assert(sheet != NULL);
+
   return sheet->texture;
 }
 
 void spritesheet_destroy(SpriteSheet *sheet) {
+  if (sheet == NULL) {
+    return;
+  }
   SpriteEntry *e = NULL, *tmp = NULL;
 
   HASH_ITER(hh, sheet->sprites, e, tmp) {

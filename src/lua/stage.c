@@ -1,15 +1,16 @@
 #include "lua/stage.h"
 #include "log.h"
 #include "lua/env.h"
+#include <assert.h>
 #include <lauxlib.h>
 #include <lua.h>
 #include <stdbool.h>
 #include <time.h>
 
 bool lua_stage_load(lua_State *L, const char *path, LuaStage *stage) {
-  if (L == NULL || path == NULL || stage == NULL) {
-    return false;
-  }
+  assert(L != NULL);
+  assert(path != NULL);
+  assert(stage != NULL);
 
   lua_State *co = lua_newthread(L);
   if (co == NULL) {
@@ -59,9 +60,7 @@ bool lua_stage_load(lua_State *L, const char *path, LuaStage *stage) {
 }
 
 void lua_stage_update(LuaStage *stage) {
-  if (stage == NULL || stage->finished) {
-    return;
-  }
+  assert(stage != NULL);
 
   if (stage->wait_frames > 0) {
     stage->wait_frames--;

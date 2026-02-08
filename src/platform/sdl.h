@@ -13,7 +13,7 @@ typedef struct Platform {
   bool running;
 } Platform;
 
-Platform *platform_init(const Configuration *config);
+Platform *platform_create(const Configuration *config);
 void platform_destroy(Platform *platform);
 
 bool platform_is_running(const Platform *platform);

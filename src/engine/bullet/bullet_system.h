@@ -10,7 +10,7 @@ typedef struct BulletSystem BulletSystem;
 
 typedef void (*BulletIteratorFn)(const Bullet *bullet, void *user_data);
 
-BulletSystem *bullet_system_init(size_t capacity);
+BulletSystem *bullet_system_create(size_t capacity);
 void bullet_system_destroy(BulletSystem *system);
 
 BulletID bullet_system_spawn(BulletSystem *system, const Bullet *init);

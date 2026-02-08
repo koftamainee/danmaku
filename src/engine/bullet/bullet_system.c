@@ -1,6 +1,7 @@
 #include "bullet_system.h"
 #include "bullet.h"
 #include "bullet_id.h"
+#include <assert.h>
 #include <float.h>
 #include <log.h>
 #include <math.h>
@@ -21,14 +22,16 @@ struct BulletSystem {
 };
 
 static inline void push_free(BulletSystem *sys, size_t index) {
-  if (sys->free_count >= sys->capacity) {
-    log_error("Free stack overflow");
-    return;
-  }
+  assert(sys != NULL);
+
+  assert(sys->free_count < sys->capacity && "Free stack overflow");
+
   sys->free_stack[sys->free_count++] = index;
 }
 
 static inline size_t pop_free(BulletSystem *sys) {
+  assert(sys != NULL);
+
   if (sys->free_count == 0) {
     return SIZE_MAX;
   }
@@ -36,15 +39,16 @@ static inline size_t pop_free(BulletSystem *sys) {
 }
 
 static inline bool bullet_outside_screen(const Bullet *b) {
+  assert(b != NULL);
+
   return b->position[0] < -500.0f || b->position[1] < -500.0f ||
          b->position[0] > SCREEN_W + 500.0f ||
          b->position[1] > SCREEN_H + 500.0f;
 }
 
 static void kill_bullet_by_index(BulletSystem *sys, size_t index) {
-  if (index >= sys->capacity) {
-    return;
-  }
+  assert(sys != NULL);
+  assert(index < sys->capacity && "Index out of bounds for internal funtion");
 
   Bullet *b = &sys->bullets[index];
   if (b->lifetime == 0) {
@@ -57,9 +61,7 @@ static void kill_bullet_by_index(BulletSystem *sys, size_t index) {
 }
 
 static void bullet_system_compact_render_list(BulletSystem *system) {
-  if (system == NULL) {
-    return;
-  }
+  assert(system != NULL);
 
   size_t write = 0;
 
@@ -75,6 +77,8 @@ static void bullet_system_compact_render_list(BulletSystem *system) {
 }
 
 static void update_root_bullet_movement(Bullet *b) {
+  assert(b != NULL);
+
   b->speed += b->accel;
 
   if (b->min_speed != 0) {
@@ -99,7 +103,7 @@ static void update_root_bullet_movement(Bullet *b) {
   b->position[1] += sinf(b->angle) * b->speed;
 }
 
-BulletSystem *bullet_system_init(size_t capacity) {
+BulletSystem *bullet_system_create(size_t capacity) {
   if (capacity == 0) {
     log_error("Cannot create bullet system with capacity 0");
     return NULL;
@@ -137,7 +141,7 @@ BulletSystem *bullet_system_init(size_t capacity) {
     sys->bullets[i].lifetime = 0;
   }
 
-  log_info("Bullet system initialized with capacity %zu", capacity);
+  log_info("Bullet system created with capacity %zu", capacity);
   return sys;
 }
 
@@ -156,10 +160,8 @@ void bullet_system_destroy(BulletSystem *system) {
 }
 
 BulletID bullet_system_spawn(BulletSystem *system, const Bullet *init) {
-  if (system == NULL) {
-    log_error("Cannot spawn bullet: system is NULL");
-    return BULLET_ID_NULL;
-  }
+  assert(system != NULL);
+  assert(init != NULL);
 
   size_t index = pop_free(system);
   if (index == SIZE_MAX) {
@@ -170,11 +172,7 @@ BulletID bullet_system_spawn(BulletSystem *system, const Bullet *init) {
 
   Bullet *b = &system->bullets[index];
 
-  if (init != NULL) {
-    *b = *init;
-  } else {
-    memset(b, 0, sizeof(Bullet));
-  }
+  *b = *init;
 
   Bullet *parent = bullet_system_get(system, b->parent);
   if (parent != NULL) {
@@ -191,38 +189,28 @@ BulletID bullet_system_spawn(BulletSystem *system, const Bullet *init) {
 }
 
 void bullet_system_kill(BulletSystem *system, BulletID id) {
-  if (system == NULL) {
-    return;
-  }
+  assert(system != NULL);
 
-  if (bullet_id_is_null(id)) {
-    return;
-  }
-  if (id.index >= system->capacity) {
-    return;
-  }
+  assert(!bullet_id_is_null(id));
 
-  if (system->generations[id.index] != id.generation) {
-    log_warn("Attempted to kill stale bullet (index=%zu, gen=%zu vs %zu)",
-             id.index, id.generation, system->generations[id.index]);
-    return;
-  }
+  assert(id.index < system->capacity);
+
+  assert(system->generations[id.index] == id.generation);
 
   kill_bullet_by_index(system, id.index);
 }
 
 Bullet *bullet_system_get(BulletSystem *system, BulletID id) {
-  if (system == NULL) {
-    return NULL;
-  }
+  assert(system != NULL);
+
   if (bullet_id_is_null(id)) {
     return NULL;
   }
-  if (id.index >= system->capacity) {
-    return NULL;
-  }
+
+  assert(id.index < system->capacity);
 
   if (system->generations[id.index] != id.generation) {
+    log_warn("Tried to access stale bullet. Consider fixing it");
     return NULL;
   }
 
@@ -231,13 +219,14 @@ Bullet *bullet_system_get(BulletSystem *system, BulletID id) {
 }
 
 bool bullet_system_is_alive(BulletSystem *system, BulletID id) {
+  assert(system != NULL);
+  assert(!bullet_id_is_null(id));
+
   return bullet_system_get(system, id) != NULL;
 }
 
 void bullet_system_update(BulletSystem *system) {
-  if (system == NULL) {
-    return;
-  }
+  assert(system != NULL);
 
   for (size_t i = 0; i < system->capacity; i++) {
     Bullet *b = &system->bullets[i];
@@ -327,9 +316,7 @@ void bullet_system_update(BulletSystem *system) {
 }
 
 void bullet_system_clear(BulletSystem *system) {
-  if (system == NULL) {
-    return;
-  }
+  assert(system != NULL);
 
   for (size_t i = 0; i < system->capacity; i++) {
     if (system->bullets[i].lifetime != 0) {
@@ -338,16 +325,14 @@ void bullet_system_clear(BulletSystem *system) {
   }
 
   system->render_count = 0;
-
-  log_debug("Bullet system cleared");
 }
 
 void bullet_system_foreach_render_order(BulletSystem *system,
                                         BulletIteratorFn callback,
                                         void *user_data) {
-  if (system == NULL || callback == NULL) {
-    return;
-  }
+  assert(system != NULL);
+  assert(callback != NULL);
+  // user_data can be NULL
 
   for (size_t i = 0; i < system->render_count; i++) {
     size_t idx = system->render_list[i];
@@ -360,9 +345,9 @@ void bullet_system_foreach_render_order(BulletSystem *system,
 
 void bullet_system_foreach(BulletSystem *system, BulletIteratorFn callback,
                            void *user_data) {
-  if (system == NULL || callback == NULL) {
-    return;
-  }
+  assert(system != NULL);
+  assert(callback != NULL);
+  // user_data can be NULL
 
   for (size_t i = 0; i < system->capacity; i++) {
     Bullet *b = &system->bullets[i];
@@ -373,13 +358,16 @@ void bullet_system_foreach(BulletSystem *system, BulletIteratorFn callback,
 }
 
 size_t bullet_system_count_active(const BulletSystem *system) {
-  return system != NULL ? system->capacity - system->free_count : 0;
+  assert(system != NULL);
+  return system->capacity - system->free_count;
 }
 
 size_t bullet_system_count_free(const BulletSystem *system) {
-  return system != NULL ? system->free_count : 0;
+  assert(system != NULL);
+  return system->free_count;
 }
 
 size_t bullet_system_get_capacity(const BulletSystem *system) {
-  return system != NULL ? system->capacity : 0;
+  assert(system != NULL);
+  return system->capacity;
 }

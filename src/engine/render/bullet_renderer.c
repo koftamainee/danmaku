@@ -2,7 +2,9 @@
 #include "engine/bullet/bullet.h"
 #include "engine/bullet/bullet_system.h"
 #include "spritesheet.h"
+
 #include <SDL3/SDL_render.h>
+#include <log.h>
 
 struct RenderContext {
   SDL_Renderer *renderer;
@@ -11,10 +13,14 @@ struct RenderContext {
 };
 
 static void render_bullet_callback(const Bullet *b, void *user_data) {
+  assert(b != NULL);
+  assert(user_data != NULL);
+
   struct RenderContext *ctx = user_data;
 
   const SpriteRegion *region = spritesheet_get(ctx->sprites, b->sprite);
   if (region == NULL) {
+    log_error("Invalid sprite name: %s", b->sprite);
     return;
   }
 
@@ -28,9 +34,9 @@ static void render_bullet_callback(const Bullet *b, void *user_data) {
 
 void bullet_renderer_draw(BulletSystem *sys, SDL_Renderer *renderer,
                           SpriteSheet *sprites) {
-  if (sys == NULL || renderer == NULL || sprites == NULL) {
-    return;
-  }
+  assert(sys != NULL);
+  assert(renderer != NULL);
+  assert(sprites != NULL);
 
   struct RenderContext ctx = {.renderer = renderer,
                               .sprites = sprites,

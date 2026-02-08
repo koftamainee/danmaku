@@ -1,4 +1,4 @@
-#include "lua/init.h"
+#include "lua/lua_system.h"
 #include "engine/bullet/bullet_system.h"
 #include "lua/env.h"
 #include <lauxlib.h>
@@ -7,11 +7,8 @@
 
 static const char *BULLET_SYSTEM_KEY = "bullet_system_ptr";
 
-lua_State *lua_system_init(BulletSystem *bullet_system) {
-  if (!bullet_system) {
-    log_error("Cannot init Lua without bullet system");
-    return NULL;
-  }
+lua_State *lua_system_create(BulletSystem *bullet_system) {
+  assert(bullet_system != NULL);
 
   lua_State *L = luaL_newstate();
   if (L == NULL) {
@@ -27,7 +24,7 @@ lua_State *lua_system_init(BulletSystem *bullet_system) {
 
   lua_register_bullet(L);
 
-  log_info("Lua system initialized");
+  log_info("Lua system created");
   return L;
 }
 

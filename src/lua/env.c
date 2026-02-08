@@ -1,9 +1,12 @@
 #include "lua/env.h"
 #include "lua/wrappers.h"
+#include <assert.h>
 #include <lauxlib.h>
 #include <lua.h>
 
 void lua_push_engine_table(lua_State *L, bool is_sandbox, int rng_seed) {
+  assert(L != NULL);
+
   lua_newtable(L);
 
   lua_pushcfunction(L, l_engine_wait);
@@ -37,6 +40,8 @@ void lua_push_engine_table(lua_State *L, bool is_sandbox, int rng_seed) {
 }
 
 void lua_register_bullet(lua_State *L) {
+  assert(L != NULL);
+
   luaL_newmetatable(L, "Bullet");
 
   static const luaL_Reg bullet_methods[] = {

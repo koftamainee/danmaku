@@ -1,14 +1,9 @@
 #ifndef LUA_WRAPPERS_H
 #define LUA_WRAPPERS_H
 
-#include "engine/bullet/bullet_id.h"
 #include <lua.h>
 
 typedef struct BulletSystem BulletSystem;
-
-typedef struct {
-  BulletID id;
-} LuaBullet;
 
 typedef enum {
   ENGINE_ANGLE_ABSOLUTE = 0,

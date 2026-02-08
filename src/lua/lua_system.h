@@ -5,7 +5,7 @@
 
 typedef struct BulletSystem BulletSystem;
 
-lua_State *lua_system_init(BulletSystem *bullet_system);
+lua_State *lua_system_create(BulletSystem *bullet_system);
 void lua_system_destroy(lua_State *L);
 
 #endif

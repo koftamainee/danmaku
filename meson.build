@@ -57,7 +57,7 @@ srcs = files(
   'src/engine/render/spritesheet.c',
   'src/engine/render/bullet_renderer.c',
   'src/lua/env.c',
-  'src/lua/init.c',
+  'src/lua/lua_system.c',
   'src/lua/stage.c',
   'src/lua/wrappers.c'
 )
