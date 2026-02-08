@@ -1,13 +1,11 @@
+#include "config/config.h"
 #include "engine/bullet/bullet_system.h"
-#include "engine/config/config.h"
+#include "engine/framerate/limiter.h"
 #include "engine/render/bullet_renderer.h"
 #include "engine/render/spritesheet.h"
-#include "engine/time/fps.h"
 #include "lua/init.h"
 #include "lua/stage.h"
 #include "platform/sdl.h"
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_timer.h>
 #include <log.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -24,10 +22,8 @@ int main(void) {
   lua_State *L = NULL;
   LuaStage stage = {0};
   SpriteSheet *bullets_sheet = NULL;
-  FPSCounter fps_counter = {0};
+  FPSLimiter *fps_limiter = NULL;
 
-  uint64_t current_time = 0;
-  uint64_t accumulator = 0;
   uint64_t frames_count = 0;
   uint64_t next_stats_frame = 60;
 
@@ -41,7 +37,6 @@ int main(void) {
     log_fatal("Failed to parse config");
     return 1;
   }
-  log_info("%s config parsed", CONFIG_FILE_PATH);
 
   platform = platform_init(&config);
   if (platform == NULL) {
@@ -82,62 +77,37 @@ int main(void) {
     return 1;
   }
 
-  fpscounter_reset(&fps_counter);
-
-  current_time = SDL_GetTicksNS();
+  fps_limiter = fpslimiter_init();
+  if (fps_limiter == NULL) {
+    log_fatal("Failed to init fps limiter");
+    return 1;
+  }
 
   while (platform_is_running(platform)) {
-    uint64_t new_time = SDL_GetTicksNS();
-    uint64_t frame_time = new_time - current_time;
-
-    if (frame_time > 100000000ULL) {
-      log_warn("Single frame took >100ms (%lu ms), clamping",
-               frame_time / 1000000);
-      frame_time = 100000000ULL;
-    }
-
-    current_time = new_time;
-    accumulator += frame_time;
-
     platform_poll_events(platform);
 
-    int loops = 0;
-    while (accumulator >= FRAME_TIME_NS && loops < MAX_FRAME_SKIP) {
-      bullet_system_update(bullet_sys);
+    int loops = fpslimiter_begin_frame(fps_limiter);
+    for (int i = 0; i < loops; i++) {
       lua_stage_update(&stage);
+      bullet_system_update(bullet_sys);
       frames_count++;
-
-      accumulator -= FRAME_TIME_NS;
-      loops++;
-    }
-
-    if ((uint64_t)loops >= MAX_FRAME_SKIP) {
-      log_warn("Frame skip limit reached - system too slow");
-      accumulator = 0;
     }
 
     if (loops > 0) {
       platform_clear(platform);
       bullet_renderer_draw(bullet_sys, renderer, bullets_sheet);
       platform_present(platform);
-
-      fpscounter_update(&fps_counter);
     }
+
+    fpslimiter_end_frame(fps_limiter);
 
     if (frames_count >= next_stats_frame) {
       log_trace("Frame %lu | FPS: %.2f | Bullets: %zu | Acc: %.2fms",
-                frames_count, fps_counter.fps,
+                frames_count, fpslimiter_get_fps(fps_limiter),
                 bullet_system_count_active(bullet_sys),
-                (double)accumulator / 1000000.0);
+                fpslimiter_get_accumulator_ms(fps_limiter));
 
-      next_stats_frame += 60;
-    }
-
-    if (accumulator < FRAME_TIME_NS - 1000000ULL) {
-      uint64_t sleep_time = (FRAME_TIME_NS - accumulator) / 2;
-      if (sleep_time > 500000ULL) {
-        SDL_DelayPrecise(sleep_time);
-      }
+      next_stats_frame += FPS;
     }
   }
 
@@ -145,6 +115,7 @@ int main(void) {
   spritesheet_destroy(bullets_sheet);
   lua_system_destroy(L);
   bullet_system_destroy(bullet_sys);
+  fpslimiter_destroy(fps_limiter);
   platform_destroy(platform);
 
   return 0;

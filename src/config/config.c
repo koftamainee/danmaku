@@ -45,5 +45,7 @@ int parse_config(const char *config_file_path, Configuration *config) {
     return 1;
   }
 
+  log_info("%s config parsed", config_file_path);
+
   return 0;
 }

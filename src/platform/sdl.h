@@ -1,7 +1,7 @@
 #ifndef PLATFORM_SDL_H
 #define PLATFORM_SDL_H
 
-#include "engine/config/config.h"
+#include "config/config.h"
 #include <stdbool.h>
 
 typedef struct SDL_Window SDL_Window;

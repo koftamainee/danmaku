@@ -1,6 +1,7 @@
 #include "bullet_system.h"
 #include "bullet.h"
 #include "bullet_id.h"
+#include <float.h>
 #include <log.h>
 #include <math.h>
 #include <stdlib.h>
@@ -15,7 +16,6 @@ struct BulletSystem {
   size_t *free_stack;
   size_t capacity;
   size_t free_count;
-  size_t active_count;
   size_t *render_list;
   size_t render_count;
 };
@@ -54,7 +54,6 @@ static void kill_bullet_by_index(BulletSystem *sys, size_t index) {
   b->lifetime = 0;
   push_free(sys, index);
   sys->generations[index]++;
-  sys->active_count--;
 }
 
 static void bullet_system_compact_render_list(BulletSystem *system) {
@@ -73,6 +72,31 @@ static void bullet_system_compact_render_list(BulletSystem *system) {
   }
 
   system->render_count = write;
+}
+
+static void update_root_bullet_movement(Bullet *b) {
+  b->speed += b->accel;
+
+  if (b->min_speed != 0) {
+    b->speed = fmaxf(b->speed, b->min_speed);
+  }
+  if (b->max_speed != 0) {
+    b->speed = fminf(b->speed, b->max_speed);
+  }
+
+  b->angular_vel += b->angular_accel;
+
+  if (b->min_angular_vel != 0) {
+    b->angular_vel = fmaxf(b->angular_vel, b->min_angular_vel);
+  }
+  if (b->max_angular_vel != 0) {
+    b->angular_vel = fminf(b->angular_vel, b->max_angular_vel);
+  }
+
+  b->angle += b->angular_vel;
+
+  b->position[0] += cosf(b->angle) * b->speed;
+  b->position[1] += sinf(b->angle) * b->speed;
 }
 
 BulletSystem *bullet_system_init(size_t capacity) {
@@ -105,7 +129,6 @@ BulletSystem *bullet_system_init(size_t capacity) {
 
   sys->capacity = capacity;
   sys->free_count = capacity;
-  sys->active_count = 0;
   sys->render_count = 0;
 
   for (size_t i = 0; i < capacity; i++) {
@@ -159,12 +182,7 @@ BulletID bullet_system_spawn(BulletSystem *system, const Bullet *init) {
     glm_vec2_add(b->position, b->parent_offset, b->position);
   }
 
-  if (b->lifetime == 0) {
-    b->lifetime = -1;
-  }
-
   system->generations[index]++;
-  system->active_count++;
   system->render_list[system->render_count++] = index;
 
   BulletID id = {.index = index, .generation = system->generations[index]};
@@ -176,6 +194,7 @@ void bullet_system_kill(BulletSystem *system, BulletID id) {
   if (system == NULL) {
     return;
   }
+
   if (bullet_id_is_null(id)) {
     return;
   }
@@ -228,28 +247,7 @@ void bullet_system_update(BulletSystem *system) {
     }
 
     if (bullet_id_is_null(b->parent)) {
-      b->speed += b->accel;
-
-      if (b->min_speed != 0) {
-        b->speed = fmaxf(b->speed, b->min_speed);
-      }
-      if (b->max_speed != 0) {
-        b->speed = fminf(b->speed, b->max_speed);
-      }
-
-      b->angular_vel += b->angular_accel;
-
-      if (b->min_angular_vel != 0) {
-        b->angular_vel = fmaxf(b->angular_vel, b->min_angular_vel);
-      }
-      if (b->max_angular_vel != 0) {
-        b->angular_vel = fminf(b->angular_vel, b->max_angular_vel);
-      }
-
-      b->angle += b->angular_vel;
-
-      b->position[0] += cosf(b->angle) * b->speed;
-      b->position[1] += sinf(b->angle) * b->speed;
+      update_root_bullet_movement(b);
 
       if (bullet_outside_screen(b)) {
         kill_bullet_by_index(system, i);
@@ -257,17 +255,37 @@ void bullet_system_update(BulletSystem *system) {
       }
     }
 
+    if (b->lifetime == 1) {
+      kill_bullet_by_index(system, i);
+    }
+
     if (b->lifetime > 0) {
       b->lifetime--;
-      if (b->lifetime == 0) {
-        kill_bullet_by_index(system, i);
-      }
+    }
+  }
+
+  for (size_t i = 0; i < system->capacity; i++) {
+    Bullet *b = &system->bullets[i];
+
+    if (b->lifetime == 0 || bullet_id_is_null(b->parent)) {
+      continue;
+    }
+
+    if (b->angular_vel != 0.0f) {
+      float dx = b->parent_offset[0];
+      float dy = b->parent_offset[1];
+
+      float radius = sqrtf(dx * dx + dy * dy);
+      float angle = atan2f(dy, dx) + b->angular_vel;
+
+      b->parent_offset[0] = cosf(angle) * radius;
+      b->parent_offset[1] = sinf(angle) * radius;
     }
   }
 
   bool updated = true;
-  int max_iterations = 10;
   int iteration = 0;
+  const int max_iterations = 10;
 
   while (updated && iteration < max_iterations) {
     updated = false;
@@ -276,33 +294,23 @@ void bullet_system_update(BulletSystem *system) {
     for (size_t i = 0; i < system->capacity; i++) {
       Bullet *b = &system->bullets[i];
 
-      if (b->lifetime == 0) {
-        continue;
-      }
-      if (bullet_id_is_null(b->parent)) {
+      if (b->lifetime == 0 || bullet_id_is_null(b->parent)) {
         continue;
       }
 
       Bullet *parent = bullet_system_get(system, b->parent);
-      if (parent != NULL) {
-        float dx = b->parent_offset[0];
-        float dy = b->parent_offset[1];
-        float radius = sqrtf(dx * dx + dy * dy);
-        float angle = atan2f(dy, dx);
-        angle += b->angular_vel;
-        b->parent_offset[0] = cosf(angle) * radius;
-        b->parent_offset[1] = sinf(angle) * radius;
-
-        float new_x = parent->position[0] + b->parent_offset[0];
-        float new_y = parent->position[1] + b->parent_offset[1];
-
-        if (b->position[0] != new_x || b->position[1] != new_y) {
-          b->position[0] = new_x;
-          b->position[1] = new_y;
-          updated = true;
-        }
-      } else {
+      if (parent == NULL) {
         b->parent = BULLET_ID_NULL;
+        continue;
+      }
+
+      float new_x = parent->position[0] + b->parent_offset[0];
+      float new_y = parent->position[1] + b->parent_offset[1];
+
+      if (b->position[0] != new_x || b->position[1] != new_y) {
+        b->position[0] = new_x;
+        b->position[1] = new_y;
+        updated = true;
       }
 
       if (bullet_outside_screen(b)) {
@@ -328,6 +336,8 @@ void bullet_system_clear(BulletSystem *system) {
       kill_bullet_by_index(system, i);
     }
   }
+
+  system->render_count = 0;
 
   log_debug("Bullet system cleared");
 }
@@ -361,8 +371,9 @@ void bullet_system_foreach(BulletSystem *system, BulletIteratorFn callback,
     }
   }
 }
+
 size_t bullet_system_count_active(const BulletSystem *system) {
-  return system != NULL ? system->active_count : 0;
+  return system != NULL ? system->capacity - system->free_count : 0;
 }
 
 size_t bullet_system_count_free(const BulletSystem *system) {

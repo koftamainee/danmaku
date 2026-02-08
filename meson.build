@@ -49,8 +49,8 @@ incdir = include_directories(srcdir)
 srcs = files(
   'src/main.c',
   'src/platform/sdl.c',
-  'src/engine/config/config.c',
-  'src/engine/time/fps.c',
+  'src/config/config.c',
+  'src/engine/framerate/limiter.c',
   'src/engine/bullet/bullet.c',
   'src/engine/bullet/bullet_id.c',
   'src/engine/bullet/bullet_system.c',
