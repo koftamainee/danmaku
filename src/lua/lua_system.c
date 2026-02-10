@@ -1,15 +1,16 @@
 #include "lua/lua_system.h"
-#include "engine/bullet/bullet_system.h"
 #include "lua/env.h"
+#include "lua_system.h"
 #include <assert.h>
 #include <lauxlib.h>
 #include <log.h>
 #include <lualib.h>
+#include <stdint.h>
 
-static const char *BULLET_SYSTEM_KEY = "bullet_system_ptr";
+void *LUA_ENGINE_KEY;
 
-lua_State *lua_system_create(BulletSystem *bullet_system) {
-  assert(bullet_system != NULL);
+lua_State *lua_system_create(Engine *engine) {
+  assert(engine != NULL);
 
   lua_State *L = luaL_newstate();
   if (L == NULL) {
@@ -19,8 +20,8 @@ lua_State *lua_system_create(BulletSystem *bullet_system) {
 
   luaL_openlibs(L);
 
-  lua_pushlightuserdata(L, (void *)BULLET_SYSTEM_KEY);
-  lua_pushlightuserdata(L, bullet_system);
+  lua_pushlightuserdata(L, LUA_ENGINE_KEY);
+  lua_pushlightuserdata(L, engine);
   lua_settable(L, LUA_REGISTRYINDEX);
 
   lua_register_bullet(L);

@@ -43,7 +43,10 @@ FPSLimiter *fpslimiter_create(void) {
   return fps;
 }
 
-void fpslimiter_destroy(FPSLimiter *fps) { free(fps); }
+void fpslimiter_destroy(FPSLimiter *fps) {
+  free(fps);
+  log_info("FPS limiter destroyed");
+}
 
 int fpslimiter_begin_frame(FPSLimiter *fps) {
   assert(fps != NULL);

@@ -186,6 +186,19 @@ bool bullet_set_angle(BulletSystem *sys, BulletID id, float angle) {
   return true;
 }
 
+bool bullet_add_angle(BulletSystem *sys, BulletID id, float angle) {
+  assert(sys != NULL);
+  assert(!bullet_id_is_null(id));
+
+  Bullet *b = bullet_system_get(sys, id);
+  if (b == NULL) {
+    return false;
+  }
+
+  b->angle += angle;
+  return true;
+}
+
 bool bullet_aim(BulletSystem *sys, BulletID id) {
   assert(sys != NULL);
   assert(!bullet_id_is_null(id));

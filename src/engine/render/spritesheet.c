@@ -10,6 +10,12 @@
 
 #define PATH_MAX 4096
 
+typedef struct SpriteEntry {
+  char *name;
+  SpriteRegion region;
+  UT_hash_handle hh;
+} SpriteEntry;
+
 struct SpriteSheet {
   SDL_Texture *texture;
   SpriteEntry *sprites;
@@ -44,7 +50,7 @@ static char *read_file(const char *path) {
   return buf;
 }
 
-SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path) {
+SpriteSheet *spritesheet_create(SDL_Renderer *renderer, const char *json_path) {
   assert(json_path != NULL);
   assert(renderer != NULL);
 
@@ -147,7 +153,7 @@ SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path) {
 
   cJSON_Delete(root);
 
-  log_info("Spritesheet from %s loaded", json_path);
+  log_info("Spritesheet from %s created", json_path);
 
   return spritesheet;
 }
@@ -187,4 +193,5 @@ void spritesheet_destroy(SpriteSheet *sheet) {
 
   SDL_DestroyTexture(sheet->texture);
   free(sheet);
+  log_info("Spritesheet destroyed");
 }

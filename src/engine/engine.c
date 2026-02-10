@@ -11,8 +11,11 @@
 #include "platform/sdl.h"
 
 #include <assert.h>
+#include <stdint.h>
+#include <time.h>
 
-#define LUA_STAGE_PATH "./scenarios/base/stages/stage1.lua"
+// #define LUA_STAGE_PATH "./scenarios/base/stages/stage1.lua"
+#define LUA_STAGE_PATH "./lua_api/bulletAPI.lua"
 #define SPRITESHEET_PATH "./scenarios/base/assets/EoSD_bullets.json"
 #define MAX_BULLETS_COUNT 30000
 
@@ -21,9 +24,11 @@ struct Engine {
   Platform *platform;
   BulletSystem *bullet_sys;
   lua_State *L;
-  LuaStage stage;
+  LuaStage *stage;
   SpriteSheet *bullets_sheet;
   FPSLimiter *fps_limiter;
+
+  int rng_seed;
 
   uint64_t frames;
   uint64_t next_stats_frame;
@@ -56,21 +61,22 @@ Engine *engine_create(const Configuration *config) {
     return NULL;
   }
 
-  engine->L = lua_system_create(engine->bullet_sys);
+  engine->L = lua_system_create(engine);
   if (engine->L == NULL) {
     log_error("Failed to create Lua system");
     engine_destroy(engine);
     return NULL;
   }
 
-  if (!lua_stage_load(engine->L, LUA_STAGE_PATH, &engine->stage)) {
+  engine->stage = lua_stage_create(engine->L, LUA_STAGE_PATH);
+  if (engine->stage == NULL) {
     log_error("Failed to load lua stage");
     engine_destroy(engine);
     return NULL;
   }
 
   SDL_Renderer *renderer = platform_get_renderer(engine->platform);
-  engine->bullets_sheet = spritesheet_load(renderer, SPRITESHEET_PATH);
+  engine->bullets_sheet = spritesheet_create(renderer, SPRITESHEET_PATH);
   if (engine->bullets_sheet == NULL) {
     log_error("Failed to load bullets SpriteSheet");
     engine_destroy(engine);
@@ -83,6 +89,10 @@ Engine *engine_create(const Configuration *config) {
     engine_destroy(engine);
     return NULL;
   }
+
+  srand((unsigned int)time(NULL));
+  engine->rng_seed = rand(); // TODO: make local random function to not use
+                             // default rand + srand
 
   return engine;
 }
@@ -99,7 +109,13 @@ void engine_run(Engine *engine) {
 
     int loops = fpslimiter_begin_frame(engine->fps_limiter);
     for (int i = 0; i < loops; i++) {
-      lua_stage_update(&engine->stage);
+      lua_stage_update(engine->stage);
+
+      if (lua_stage_is_finished(engine->stage)) {
+        log_info("Lua stage ended. Exiting...");
+        return; // This is temp
+      }
+
       bullet_system_update(engine->bullet_sys);
       engine->frames++;
     }
@@ -124,23 +140,69 @@ void engine_run(Engine *engine) {
 }
 
 void engine_destroy(Engine *engine) {
-  if (engine == NULL)
+  if (engine == NULL) {
     return;
+  }
 
-  if (engine->bullets_sheet != NULL)
+  if (engine->bullets_sheet != NULL) {
     spritesheet_destroy(engine->bullets_sheet);
+  }
 
-  if (engine->L != NULL)
+  if (engine->L != NULL) {
     lua_system_destroy(engine->L);
+  }
 
-  if (engine->bullet_sys)
+  if (engine->stage != NULL) {
+    lua_stage_destroy(engine->stage);
+  }
+
+  if (engine->bullet_sys) {
     bullet_system_destroy(engine->bullet_sys);
+  }
 
-  if (engine->fps_limiter != NULL)
+  if (engine->fps_limiter != NULL) {
     fpslimiter_destroy(engine->fps_limiter);
+  }
 
-  if (engine->platform != NULL)
+  if (engine->platform != NULL) {
     platform_destroy(engine->platform);
+  }
 
   free(engine);
+}
+
+BulletSystem *engine_get_bullet_system(Engine *engine) {
+  assert(engine != NULL);
+
+  return engine->bullet_sys;
+}
+
+uint64_t engine_get_time(Engine *engine) {
+  assert(engine != NULL);
+  return engine->frames;
+}
+
+const Configuration *engine_get_config(const Engine *engine) {
+  assert(engine != NULL);
+  return &engine->config;
+}
+
+FPSLimiter *engine_get_fps_limiter(Engine *engine) {
+  assert(engine != NULL);
+  return engine->fps_limiter;
+}
+
+int engine_get_rng_seed(const Engine *engine) {
+  assert(engine != NULL);
+  return engine->rng_seed;
+}
+
+LuaStage *engine_get_stage(const Engine *engine) {
+  assert(engine != NULL);
+  return engine->stage;
+}
+
+SpriteSheet *engine_get_bullets_sheet(Engine *engine) {
+  assert(engine != NULL);
+  return engine->bullets_sheet;
 }

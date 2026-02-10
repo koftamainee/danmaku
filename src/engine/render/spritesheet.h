@@ -8,19 +8,12 @@ typedef struct {
   SDL_FRect src;
 } SpriteRegion;
 
-typedef struct SpriteEntry {
-  char *name;
-  SpriteRegion region;
-  UT_hash_handle hh;
-} SpriteEntry;
-
 typedef struct SpriteSheet SpriteSheet;
 
-SpriteSheet *spritesheet_load(SDL_Renderer *renderer, const char *json_path);
+SpriteSheet *spritesheet_create(SDL_Renderer *renderer, const char *json_path);
+void spritesheet_destroy(SpriteSheet *spritesheet);
 
 const SpriteRegion *spritesheet_get(const SpriteSheet *spritesheet,
                                     const char *name);
 
 SDL_Texture *spritesheet_texture(const SpriteSheet *spritesheet);
-
-void spritesheet_destroy(SpriteSheet *spritesheet);

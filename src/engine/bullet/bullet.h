@@ -49,6 +49,7 @@ bool bullet_set_angular_vel_limits(BulletSystem *sys, BulletID id,
                                    float max_angular_vel);
 
 bool bullet_set_angle(BulletSystem *sys, BulletID id, float angle);
+bool bullet_add_angle(BulletSystem *sys, BulletID id, float angle);
 bool bullet_aim(BulletSystem *sys, BulletID id);
 
 bool bullet_set_parent_offset(BulletSystem *sys, BulletID id, vec2 offset);

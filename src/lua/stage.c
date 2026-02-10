@@ -5,34 +5,46 @@
 #include <lauxlib.h>
 #include <lua.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <time.h>
 
-bool lua_stage_load(lua_State *L, const char *path, LuaStage *stage) {
+struct LuaStage {
+  lua_State *co;
+  int wait_frames;
+  bool finished;
+};
+
+LuaStage *lua_stage_create(lua_State *L, const char *path) {
   assert(L != NULL);
   assert(path != NULL);
-  assert(stage != NULL);
+
+  LuaStage *stage = calloc(1, sizeof(LuaStage));
 
   lua_State *co = lua_newthread(L);
   if (co == NULL) {
     log_error("Failed to create Lua coroutine");
+    lua_stage_destroy(stage);
     return false;
   }
 
   if (luaL_loadfile(co, path) != LUA_OK) {
     lua_pop(L, 1);
     log_error("Failed to load %s file into coroutine", path);
+    lua_stage_destroy(stage);
     return false;
   }
 
   if (lua_pcall(co, 0, 1, 0)) {
     lua_pop(L, 1);
     log_error("Failed to pcal %s file", path);
+    lua_stage_destroy(stage);
     return false;
   }
 
   if (!lua_istable(co, -1)) {
     lua_pop(co, 1);
     log_error("%s file not returning a table", path);
+    lua_stage_destroy(stage);
     return false;
   }
 
@@ -43,6 +55,7 @@ bool lua_stage_load(lua_State *L, const char *path, LuaStage *stage) {
   if (!lua_isfunction(co, -1)) {
     lua_pop(co, 2);
     log_error("'run' field from table is not a function: %s", path);
+    lua_stage_destroy(stage);
     return false;
   }
 
@@ -54,9 +67,16 @@ bool lua_stage_load(lua_State *L, const char *path, LuaStage *stage) {
   stage->wait_frames = 0;
   stage->finished = false;
 
-  log_info("%s lua stage loaded", path);
+  log_info("%s lua stage created", path);
 
-  return true;
+  return stage;
+}
+
+void lua_stage_destroy(LuaStage *stage) {
+  if (stage != NULL) {
+    free(stage);
+  }
+  log_info("Lua stage destroyed");
 }
 
 void lua_stage_update(LuaStage *stage) {
@@ -87,3 +107,5 @@ void lua_stage_update(LuaStage *stage) {
     }
   }
 }
+
+bool lua_stage_is_finished(LuaStage *stage) { return stage->finished; }

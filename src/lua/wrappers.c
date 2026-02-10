@@ -1,26 +1,27 @@
 #include "lua/wrappers.h"
 #include "engine/bullet/bullet.h"
 #include "engine/bullet/bullet_id.h"
-#include "engine/bullet/bullet_system.h"
+#include "engine/engine.h"
 #include <assert.h>
 #include <lauxlib.h>
 #include <lua.h>
+#include <stdint.h>
 #include <string.h>
 
 typedef struct {
   BulletID id;
 } LuaBullet;
 
-static const char *BULLET_SYSTEM_KEY = "bullet_system_ptr";
+#include "lua_system.h"
 
-BulletSystem *lua_get_bullet_system(lua_State *L) {
+static Engine *lua_get_engine(lua_State *L) {
   assert(L != NULL);
 
-  lua_pushlightuserdata(L, (void *)BULLET_SYSTEM_KEY);
+  lua_pushlightuserdata(L, (void *)LUA_ENGINE_KEY);
   lua_gettable(L, LUA_REGISTRYINDEX);
-  BulletSystem *sys = lua_touserdata(L, -1);
+  Engine *engine = lua_touserdata(L, -1);
   lua_pop(L, 1);
-  return sys;
+  return engine;
 }
 
 static inline LuaBullet *check_lua_bullet(lua_State *L, int expected_args,
@@ -44,10 +45,13 @@ static inline LuaBullet *check_lua_bullet(lua_State *L, int expected_args,
 int l_bullet_set_speed(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 2, "set_speed()");
   float speed = (float)luaL_checknumber(L, 2);
@@ -62,10 +66,13 @@ int l_bullet_set_speed(lua_State *L) {
 int l_bullet_set_accel(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 2, "set_accel()");
   float accel = (float)luaL_checknumber(L, 2);
@@ -78,10 +85,15 @@ int l_bullet_set_accel(lua_State *L) {
 }
 
 int l_bullet_set_min_speed(lua_State *L) {
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (!sys) {
-    return luaL_error(L, "Bullet system not initialized");
+  assert(L != NULL);
+
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 2, "set_min_speed()");
   float min_speed = (float)luaL_checknumber(L, 2);
@@ -96,10 +108,13 @@ int l_bullet_set_min_speed(lua_State *L) {
 int l_bullet_set_max_speed(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 2, "set_max_speed()");
   float max_speed = (float)luaL_checknumber(L, 2);
@@ -114,10 +129,13 @@ int l_bullet_set_max_speed(lua_State *L) {
 int l_bullet_set_speed_limits(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 3, "set_speed_limits()");
   float min_speed = (float)luaL_checknumber(L, 2);
@@ -133,10 +151,13 @@ int l_bullet_set_speed_limits(lua_State *L) {
 int l_bullet_set_angular_vel(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 2, "set_angular_vel()");
   float angular_vel = (float)luaL_checknumber(L, 2);
@@ -151,10 +172,13 @@ int l_bullet_set_angular_vel(lua_State *L) {
 int l_bullet_set_angular_accel(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 2, "set_angular_accel()");
   float angular_accel = (float)luaL_checknumber(L, 2);
@@ -169,10 +193,13 @@ int l_bullet_set_angular_accel(lua_State *L) {
 int l_bullet_set_min_angular_vel(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 2, "set_min_angular_vel()");
   float min_angular_vel = (float)luaL_checknumber(L, 2);
@@ -187,10 +214,13 @@ int l_bullet_set_min_angular_vel(lua_State *L) {
 int l_bullet_set_max_angular_vel(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 2, "set_max_angular_vel()");
   float max_angular_vel = (float)luaL_checknumber(L, 2);
@@ -205,10 +235,13 @@ int l_bullet_set_max_angular_vel(lua_State *L) {
 int l_bullet_set_angular_vel_limits(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 3, "set_angular_vel_limits()");
   float min_angular_vel = (float)luaL_checknumber(L, 2);
@@ -226,13 +259,46 @@ int l_bullet_set_angular_vel_limits(lua_State *L) {
 int l_bullet_set_angle(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  int nargs = lua_gettop(L);
+  if (nargs != 2 && nargs != 3) {
+    luaL_error(L, "set_angle()): expected 1 or 2 argument(s), got %d",
+               nargs - 1);
   }
 
-  LuaBullet *b = check_lua_bullet(L, 2, "set_angle()");
+  LuaBullet *b = (LuaBullet *)luaL_checkudata(L, 1, "Bullet");
+  if (b == NULL) {
+    luaL_error(L, "set_angle(): invalid bullet userdata");
+  }
+
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
+  }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
+
+  LuaAngle angle_type = LUA_ANGLE_ABSOLUTE;
+
   float angle = (float)luaL_checknumber(L, 2);
+
+  if (nargs == 3) {
+    int angle_from_lua = (int)luaL_checkinteger(L, 3);
+    if (angle_from_lua < LUA_ANGLE_ABSOLUTE ||
+        angle_from_lua > LUA_ANGLE_PLAYER) {
+      luaL_error(L, "set_angle(): invalid angle type");
+    }
+    angle_type = (LuaAngle)angle_from_lua;
+  }
+
+  switch (angle_type) {
+  case LUA_ANGLE_ABSOLUTE:
+    break;
+  case LUA_ANGLE_RELATIVE:
+    break;
+  case LUA_ANGLE_PLAYER:
+    break;
+  }
 
   if (!bullet_set_angle(sys, b->id, angle)) {
     return luaL_error(L, "set_angle(): failed, bullet may be dead");
@@ -244,10 +310,13 @@ int l_bullet_set_angle(lua_State *L) {
 int l_bullet_aim(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 1, "aim()");
 
@@ -261,10 +330,13 @@ int l_bullet_aim(lua_State *L) {
 int l_bullet_set_parent_offset(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 2, "set_parent_offset()");
 
@@ -298,10 +370,13 @@ int l_bullet_set_parent_offset(lua_State *L) {
 int l_bullet_attach_to(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = (LuaBullet *)luaL_checkudata(L, 1, "Bullet");
   if (b == NULL) {
@@ -333,10 +408,13 @@ int l_bullet_attach_to(lua_State *L) {
 int l_bullet_detach(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 1, "detach()");
   vec2 offset = {0.0f, 0.0f};
@@ -351,10 +429,13 @@ int l_bullet_detach(lua_State *L) {
 int l_bullet_set_lifetime(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   LuaBullet *b = check_lua_bullet(L, 2, "set_lifetime()");
   int lifetime = (int)luaL_checkinteger(L, 2);
@@ -369,7 +450,12 @@ int l_bullet_set_lifetime(lua_State *L) {
 int l_engine_time(lua_State *L) {
   assert(L != NULL);
 
-  lua_pushinteger(L, 0); // TODO: fixme somehow pls pls pplsls
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
+  }
+
+  lua_pushinteger(L, (lua_Integer)engine_get_time(eng));
   return 1;
 }
 
@@ -402,10 +488,13 @@ int l_engine_yield(lua_State *L) {
 int l_spawn_bullet(lua_State *L) {
   assert(L != NULL);
 
-  BulletSystem *sys = lua_get_bullet_system(L);
-  if (sys == NULL) {
-    return luaL_error(L, "Bullet system not initialized");
+  Engine *eng = lua_get_engine(L);
+  if (eng == NULL) {
+    return luaL_error(L, "Engine not initialized");
   }
+
+  BulletSystem *sys = engine_get_bullet_system(eng);
+  assert(sys != NULL);
 
   if (lua_gettop(L) != 1) {
     return luaL_error(L, "spawn_bullet() expects exactly 1 argument, got %d",

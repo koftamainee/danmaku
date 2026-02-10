@@ -6,12 +6,10 @@
 typedef struct BulletSystem BulletSystem;
 
 typedef enum {
-  ENGINE_ANGLE_ABSOLUTE = 0,
-  ENGINE_ANGLE_RELATIVE = 1,
-  ENGINE_ANGLE_PLAYER = 2,
-} EngineAngle;
-
-BulletSystem *lua_get_bullet_system(lua_State *L);
+  LUA_ANGLE_ABSOLUTE = 0,
+  LUA_ANGLE_RELATIVE = 1,
+  LUA_ANGLE_PLAYER = 2,
+} LuaAngle;
 
 int l_bullet_set_speed(lua_State *L);
 int l_bullet_set_accel(lua_State *L);

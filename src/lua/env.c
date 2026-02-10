@@ -22,13 +22,13 @@ void lua_push_engine_table(lua_State *L, bool is_sandbox, int rng_seed) {
   lua_setfield(L, -2, "spawn_bullet");
 
   lua_newtable(L);
-  lua_pushinteger(L, ENGINE_ANGLE_ABSOLUTE);
+  lua_pushinteger(L, LUA_ANGLE_ABSOLUTE);
   lua_setfield(L, -2, "absolute");
 
-  lua_pushinteger(L, ENGINE_ANGLE_RELATIVE);
+  lua_pushinteger(L, LUA_ANGLE_RELATIVE);
   lua_setfield(L, -2, "relative");
 
-  lua_pushinteger(L, ENGINE_ANGLE_PLAYER);
+  lua_pushinteger(L, LUA_ANGLE_PLAYER);
   lua_setfield(L, -2, "player");
 
   lua_setfield(L, -2, "angle");
