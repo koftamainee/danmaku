@@ -2,6 +2,7 @@
 #include "engine/bullet/bullet.h"
 #include "engine/bullet/bullet_system.h"
 #include "spritesheet.h"
+#include <assert.h>
 
 #include <SDL3/SDL_render.h>
 #include <log.h>

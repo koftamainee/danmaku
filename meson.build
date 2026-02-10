@@ -3,6 +3,7 @@ project('danmaku', 'c',
   default_options : [
     'warning_level=3',
     'c_std=c11',         
+    'b_ndebug=if-release',
   ]
 )
 
@@ -20,12 +21,17 @@ add_project_arguments([
 log_sub = subproject('log')             
 log_dep = log_sub.get_variable('log_dep')  
 
+
+# TODO: static doesnt work for inih and lua
+# probably need to build them from scratch too
+cjson_dep = dependency('libcjson', static: true)
+inih_dep  = dependency('inih', static: true)
+cglm_dep  = dependency('cglm', static: true)
+lua_dep   = dependency('lua', static: true)
+
+
 sdl3_dep     = dependency('sdl3')
 sdl3_img_dep = dependency('SDL3_image')
-cglm_dep     = dependency('cglm')
-lua_dep      = dependency('lua')
-inih_dep     = dependency('inih')
-cjson_dep    = dependency('libcjson')
 uthash_dep   = dependency('uthash')
 
 cc = meson.get_compiler('c')

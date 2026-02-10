@@ -1,6 +1,7 @@
 #include "lua/lua_system.h"
 #include "engine/bullet/bullet_system.h"
 #include "lua/env.h"
+#include <assert.h>
 #include <lauxlib.h>
 #include <log.h>
 #include <lualib.h>
