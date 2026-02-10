@@ -14,8 +14,8 @@
 #include <stdint.h>
 #include <time.h>
 
-// #define LUA_STAGE_PATH "./scenarios/base/stages/stage1.lua"
-#define LUA_STAGE_PATH "./lua_api/bulletAPI.lua"
+#define LUA_STAGE_PATH "./scenarios/base/stages/stage1.lua"
+// #define LUA_STAGE_PATH "./lua_api/bulletAPI.lua"
 #define SPRITESHEET_PATH "./scenarios/base/assets/EoSD_bullets.json"
 #define MAX_BULLETS_COUNT 30000
 

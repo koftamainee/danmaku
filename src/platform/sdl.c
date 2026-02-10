@@ -32,7 +32,7 @@ Platform *platform_create(const Configuration *config) {
       SDL_WINDOW_RESIZABLE, &platform->window, &platform->renderer);
 
   if (!success) {
-    log_fatal("SDL_CreateWindowAndRenderer Error: %s", SDL_GetError());
+    log_error("SDL_CreateWindowAndRenderer Error: %s", SDL_GetError());
     SDL_Quit();
     free(platform);
     return NULL;

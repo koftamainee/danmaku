@@ -4,6 +4,7 @@ project('danmaku', 'c',
     'warning_level=3',
     'c_std=c11',         
     'b_ndebug=if-release',
+    # 'wrap_mode=forcefallback',
   ]
 )
 
@@ -22,20 +23,25 @@ log_sub = subproject('log')
 log_dep = log_sub.get_variable('log_dep')  
 
 
-# TODO: static doesnt work for inih and lua
-# probably need to build them from scratch too
+lua_proj = subproject('lua',
+  default_options: ['default_library=static', 'interpreter=false']
+)
+lua_dep = lua_proj.get_variable('lua_dep')
+
+inih_dep = dependency('inih', static: true)      
+
+cglm_dep = dependency('cglm', static: true)
+
 cjson_dep = dependency('libcjson', static: true)
-inih_dep  = dependency('inih', static: true)
-cglm_dep  = dependency('cglm', static: true)
-lua_dep   = dependency('lua', static: true)
 
+uthash_dep = dependency('uthash')
 
-sdl3_dep     = dependency('sdl3')
+sdl3_dep = dependency('sdl3')
+
 sdl3_img_dep = dependency('SDL3_image')
-uthash_dep   = dependency('uthash')
 
 cc = meson.get_compiler('c')
-m_dep = cc.find_library('m', required: true)
+m_dep = cc.find_library('m')
 
 danmaku_deps = [
   log_dep,
