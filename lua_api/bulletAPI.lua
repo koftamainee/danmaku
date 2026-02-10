@@ -37,7 +37,6 @@ return {
 		--
 		-- Notes:
 		-- Bullets are dumb, engine handles movement and deletion.
-		-- Lifetime is managed internally; users cannot set it.
 		-- If parent exists, x/y are ignored.
 		-- Child bullets follow parent transform if attached.
 

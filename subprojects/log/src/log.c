@@ -2,6 +2,7 @@
 // https://github.com/koftamainee/fuse/blob/master/include/src/logger.c
 
 #include "log.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 

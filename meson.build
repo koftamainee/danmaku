@@ -65,7 +65,8 @@ srcs = files(
   'src/lua/env.c',
   'src/lua/lua_system.c',
   'src/lua/stage.c',
-  'src/lua/wrappers.c'
+  'src/lua/wrappers.c',
+  'src/engine/engine.c',
 )
 
 danmaku = executable(

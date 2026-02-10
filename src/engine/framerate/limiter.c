@@ -22,7 +22,7 @@ struct FPSLimiter {
   int loops_this_frame;
 };
 
-FPSLimiter *fpslimiter_init(void) {
+FPSLimiter *fpslimiter_create(void) {
   FPSLimiter *fps = calloc(1, sizeof(FPSLimiter));
   if (fps == NULL)
     return NULL;

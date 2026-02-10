@@ -16,7 +16,7 @@
 
 typedef struct FPSLimiter FPSLimiter;
 
-FPSLimiter *fpslimiter_init(void);
+FPSLimiter *fpslimiter_create(void);
 void fpslimiter_destroy(FPSLimiter *fps);
 
 int fpslimiter_begin_frame(FPSLimiter *fps);
