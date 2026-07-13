@@ -1,0 +1,8 @@
+[package]
+name = "content"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+slotmap = "1.1.1"
+thiserror = "2.0.18"

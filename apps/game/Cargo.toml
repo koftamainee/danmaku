@@ -1,0 +1,15 @@
+[package]
+name = "game"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+core = { path = "../../crates/core" }
+pollster = "1.0.1"
+renderer = { path = "../../crates/renderer" }
+content = { path = "../../crates/content" }
+scripting = { path = "../../crates/scripting" }
+winit = "0.30.13"
+log = "0.4.33"
+glam = { version = "0.33.2", features = ["bytemuck"] }
+bytemuck = { version = "1", features = ["derive"] }

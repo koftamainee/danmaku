@@ -1,0 +1,14 @@
+[workspace]
+resolver = "3"
+
+members = [
+    "crates/core",
+    "crates/renderer",
+    "crates/scripting",
+    "apps/game",
+    "crates/content",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
