@@ -1,5 +1,5 @@
 -- recursive function shold be outside of return
-table_deep_copy(table)
+local table_deep_copy(table)
     local copy = {}
     for key, value in pairs(table) do
         if type(value) == "table" then
