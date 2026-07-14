@@ -27,7 +27,7 @@ return {
         return copy
     end,
 
-    table_deep_copy = table_deep_copy
+    table_deep_copy = table_deep_copy,
 
     table_keys = function(table)
         local keys = {}
