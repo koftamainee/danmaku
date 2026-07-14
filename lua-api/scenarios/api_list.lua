@@ -1,0 +1,60 @@
+return {
+    run = function(danmaku) 
+        -- global namespace - project structure function
+        danmaku.log("prints the message")
+        local module = danmaku.import("path/to/module.lua") -- imports module type file
+        danmaku.load_stage("path/to/stage.lua") -- loads stage (blocking)
+
+
+        -- content - loads and manage assets
+        local spritesheet = danmaku.content.load_spritesheet("path/to/spritesheet.lua") -- load spritesheet from editor-generated file
+
+        -- time - coroutine management function
+        -- NOTE: time correlate with task modules, it is abstraction from coroutines
+        -- NOTE: we separate it for clearer dev exp
+        -- NOTE: danmaku.time.every is automatically killed after stage end
+        local time = danmaku.time.current() -- get time in frames from stage start
+        danmaku.time.yield() -- gives control flow to engine
+        danmaku.time.wait(5) -- gives control flow to engine and waits 5 frames
+        local id1 = danmaku.time.at(60, function() end) -- runs callback at 60 frame
+        local id2 = danmaku.time.after(60, function() end) -- runs callback after 60 frame from danmaku.time.current()
+        local id3 = danmaku.time.every(60, function() end) -- runs callback every 60 frames
+        danmaku.time.cancel(id1) -- cancels scheduled callback
+
+        -- task - spawns another coroutines
+        local task_id = danmaku.task.spawn(function() end) -- spawns new coroutine and launch passed function
+        danmaku.task.join(task_id) -- wait for coroutine with task_id to finish (blocking)
+        danmaku.task.cancel(task_id) -- kill coroutine
+
+        -- rng - seed-deterministic random number generation
+        local unit = danmaku.rng.float() -- generates random float from 0 to 1
+        local fnum = danmaku.rng.rangef(0.0, 10.0) -- generates float from
+        local inum = danmaku.rng.rangei(0, 10) -- generates random int
+        local angle = danmaku.rng.angle() -- generates random angle from 0 to 2 pi
+        local angle = danmaku.rng.angle_range(0, math.pi) -- generates random angle in range
+        local boolean = danmaku.rng.bool() -- generates random bool
+        local element = danmaku.rng.choise({1, 2, 3}) -- choose random element from list
+        danmaku.rng.shuffle({1, 2, 3}) -- shuffles list in place
+        local sample = danmaku.rng.sample({1, 2, 3}, 2) -- returns new table with 2 random elements from list
+        local direction = danmaku.rng.direction() -- returns random normalized direction
+        local sign = danmaku.rng.sign() -- generates 1 or -1
+
+
+        -- math - math utils that are absent in standard math module
+        local clamp = danmaku.math.clamp(5, 1, 10) -- clamps value between min and max
+        local lerp = danmaku.math.lerp(0, 10, 0.5) -- lerps value
+        local distance = danmaku.math.distance(0, 0, 10, 15) -- get distance between two points
+        local diff = danmaku.math.diff(math.pi, 5) -- normalized distance between angles
+        local angle = danmaku.math.normalize_angle(5) -- normalize angle
+        local deg = danmaku.math.deg(math.pi) -- radians -> degree
+        local rad = danmaku.math.rad(180) -- degree -> radians
+        local angle = danmaku.math.angle(10, 2, 3, 5) -- angle between two points
+        local num = danmaku.math.map_range(3, 0, 5, 0, 10) -- maps value from one range to another - (value, from_min, from_max, to_min, to_max)
+
+        -- bullet - bullet management functions
+        local bullet = danmaku.bullet.spawn({--[[ bullet table ]]}) -- spawn and return new bullet 
+        local bullets_count = danmaku.bullet.count() -- current bullet count in bullet system
+        local bullets = danmaku.bullet.get_all(); -- returns all active bullets
+
+    end
+}

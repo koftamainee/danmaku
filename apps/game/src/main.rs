@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::thread::sleep;
-use std::time;
 use content::{AssetPath, Content, Handle};
 use core::bullet::{Bullet, BulletKey, BulletKind};
 use glam::Vec2;
