@@ -15,7 +15,7 @@ return {
             patterns.spiral_galaxy,
             patterns.butterfly_wings,
         }
-    end
+    end,
 
     run = function(danmaku, ctx)
         local base_lifetime = 500
@@ -23,7 +23,7 @@ return {
         while true do
             danmaku.rng.shuffle(ctx.patterns)
 
-            for _, pattern in ctx.patterns do
+            for _, pattern in ipairs(ctx.patterns) do
                 pattern(danmaku, 320, 100, ctx.bulltes, base_lifetime)
                 danmaku.time.wait(20)
             end

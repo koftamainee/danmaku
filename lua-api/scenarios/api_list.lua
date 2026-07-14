@@ -51,10 +51,29 @@ return {
         local angle = danmaku.math.angle(10, 2, 3, 5) -- angle between two points
         local num = danmaku.math.map_range(3, 0, 5, 0, 10) -- maps value from one range to another - (value, from_min, from_max, to_min, to_max)
 
+        -- tween - interpolation
+        local t1 = danmaku.tween.linear(5)
+        local t2 = danmaku.tween.quad_in(5)
+        local t3 = danmaku.tween.quad_out(5)
+        local t4 = danmaku.tween.quad_in_out(5)
+        local t5 = danmaku.tween.cubic_in(5)
+        local t6 = danmaku.tween.cubic_out(5)
+        local t7 = danmaku.tween.bounce(5)
+        local t8 = danmaku.tween.elastic(5)
+
         -- bullet - bullet management functions
         local bullet = danmaku.bullet.spawn({--[[ bullet table ]]}) -- spawn and return new bullet 
         local bullets_count = danmaku.bullet.count() -- current bullet count in bullet system
         local bullets = danmaku.bullet.get_all(); -- returns all active bullets
+
+        -- utils
+        danmaku.utils.map({1, 2, 3}, function(x) return x + 1 end) -- apply function on all values in list
+        local table1 = danmaku.utils.table_copy({1, 2, 3}) -- shallow copy table
+        local table2 = danmaku.utils.table_deep_copy({1, {2, 3, 3}, 3}) -- deep copy table
+        local keys = danmaku.utils.table_keys({a = 5, b = 4}) -- returns keys array
+        local values = danmaku.utils.table_values({a = 4, b = 5}) -- returns values array
+        local merged = danmaku.utils.table_merge({a = 4, b = 5}, {a = 3, c = 7}) -- merges the tables into new one, second takes priority
+        danmaku.utils.table_merge_into({a = 4, b = 5}, {a = 3, c = 7}) -- merges second table in first, overrides values 
 
     end
 }
