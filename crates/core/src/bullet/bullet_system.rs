@@ -1,7 +1,7 @@
 use std::collections::{HashMap, VecDeque, HashSet};
 use glam::Vec2;
 use slotmap::SlotMap;
-use crate::bullet::{Bullet, BulletKey};
+use crate::bullet::{Bullet, BulletKey, MotionKind, apply_easing};
 
 fn outside_screen(playfield: Vec2, position: Vec2) -> bool {
     let half = playfield * 0.5;
@@ -34,12 +34,13 @@ impl BulletSystem {
     pub fn spawn(&mut self, init: Bullet) -> BulletKey {
         let key = self.slot_map.insert(init);
 
-        if let Some(parent) = self.slot_map[key].parent {
-            self.children_of.entry(parent).or_default().push(key);
+        if let Bullet::Polar(ref polar) = self.slot_map[key] {
+            if let Some(parent) = polar.parent {
+                self.children_of.entry(parent).or_default().push(key);
+            }
         }
 
         self.render_order.push(key);
-
         key
     }
 
@@ -63,37 +64,81 @@ impl BulletSystem {
         let playfield = self.playfield;
 
         for (key, bullet) in self.slot_map.iter_mut() {
-            if bullet.is_root() {
-                bullet.speed += bullet.acceleration;
+            if let Bullet::Polar(polar) = bullet {
+                if polar.parent.is_none() {
+                    polar.speed += polar.acceleration;
 
-                if let Some(min) = bullet.min_speed {
-                    bullet.speed = bullet.speed.max(min);
-                }
-                if let Some(max) = bullet.max_speed {
-                    bullet.speed = bullet.speed.min(max);
-                }
+                    if let Some(min) = polar.min_speed {
+                        polar.speed = polar.speed.max(min);
+                    }
+                    if let Some(max) = polar.max_speed {
+                        polar.speed = polar.speed.min(max);
+                    }
 
-                bullet.angular_velocity += bullet.angular_acceleration;
+                    polar.angular_velocity += polar.angular_acceleration;
 
-                if let Some(min) = bullet.min_angular_velocity {
-                    bullet.angular_velocity = bullet.angular_velocity.max(min);
-                }
-                if let Some(max) = bullet.max_angular_velocity {
-                    bullet.angular_velocity = bullet.angular_velocity.min(max);
-                }
+                    if let Some(min) = polar.min_angular_velocity {
+                        polar.angular_velocity = polar.angular_velocity.max(min);
+                    }
+                    if let Some(max) = polar.max_angular_velocity {
+                        polar.angular_velocity = polar.angular_velocity.min(max);
+                    }
 
-                bullet.angle += bullet.angular_velocity;
+                    polar.angle += polar.angular_velocity;
 
-                bullet.position.x += bullet.angle.cos() * bullet.speed;
-                bullet.position.y += bullet.angle.sin() * bullet.speed;
+                    polar.position.x += polar.angle.cos() * polar.speed;
+                    polar.position.y += polar.angle.sin() * polar.speed;
 
-                if outside_screen(playfield, bullet.position) {
-                    to_kill.push(key);
-                    continue;
+                    match &polar.motion {
+                        MotionKind::Sinusoidal { amplitude, frequency, phase } => {
+                            let perp = Vec2::new(-polar.angle.sin(), polar.angle.cos());
+                            let offset = ((polar.age as f32 * frequency) + phase).sin() * amplitude;
+                            polar.position += perp * offset;
+                        }
+                        MotionKind::Lerp {
+                            initial_speed, target_speed,
+                            initial_angle, target_angle,
+                            duration, easing,
+                        } => {
+                            let t = (polar.age as f32 / *duration as f32).min(1.0);
+                            let t = apply_easing(t, easing);
+                            polar.speed = initial_speed + (target_speed - initial_speed) * t;
+                            polar.angle = initial_angle + (target_angle - initial_angle) * t;
+                        }
+                        MotionKind::None => {}
+                    }
+
+                    if outside_screen(playfield, polar.position) {
+                        to_kill.push(key);
+                        continue;
+                    }
                 }
             }
+        }
 
-            match &mut bullet.lifetime {
+        let controlled_keys: Vec<BulletKey> = self.slot_map.iter()
+            .filter_map(|(key, bullet)| {
+                matches!(bullet, Bullet::Controlled(_)).then_some(key)
+            })
+            .collect();
+
+        for key in controlled_keys {
+            if let Some(Bullet::Controlled(ctrl)) = self.slot_map.get_mut(key) {
+                let mut cb = ctrl.on_update.take();
+                if let Some(ref mut cb) = cb {
+                    cb(ctrl, key);
+                }
+                ctrl.on_update = cb;
+            }
+        }
+
+        for (key, bullet) in self.slot_map.iter_mut() {
+            let lifetime = match bullet {
+                Bullet::Polar(p) => &mut p.lifetime,
+                Bullet::Controlled(c) => &mut c.lifetime,
+            };
+
+            match lifetime {
                 None => {}
                 Some(1) => {
                     to_kill.push(key);
@@ -105,14 +150,19 @@ impl BulletSystem {
         }
 
         for (_, bullet) in self.slot_map.iter_mut() {
-            if bullet.is_root() {
-                continue;
+            match bullet {
+                Bullet::Polar(p) => p.age += 1,
+                Bullet::Controlled(c) => c.age += 1,
             }
+        }
 
-            if bullet.angular_velocity != 0.0 {
-                let r = bullet.parent_offset.length();
-                let a = bullet.parent_offset.y.atan2(bullet.parent_offset.x) + bullet.angular_velocity;
-                bullet.parent_offset = Vec2::new(a.cos(), a.sin()) * r;
+        for (_, bullet) in self.slot_map.iter_mut() {
+            if let Bullet::Polar(polar) = bullet {
+                if polar.parent.is_some() && polar.angular_velocity != 0.0 {
+                    let r = polar.parent_offset.length();
+                    let a = polar.parent_offset.y.atan2(polar.parent_offset.x) + polar.angular_velocity;
+                    polar.parent_offset = Vec2::new(a.cos(), a.sin()) * r;
+                }
             }
         }
 
@@ -121,7 +171,8 @@ impl BulletSystem {
 
         for (key, bullet) in &self.slot_map {
             if bullet.is_root() {
-                queue.push_back((key, bullet.position));
+                let pos = bullet.position();
+                queue.push_back((key, pos));
                 visited.insert(key);
             }
         }
@@ -141,8 +192,8 @@ impl BulletSystem {
                 let parent_alive = self.slot_map.contains_key(parent_key);
 
                 let child = match self.slot_map.get_mut(child_key) {
-                    Some(c) => c,
-                    None => continue,
+                    Some(Bullet::Polar(c)) => c,
+                    _ => continue,
                 };
 
                 if parent_alive {
@@ -156,7 +207,7 @@ impl BulletSystem {
                     child.parent = None;
                 }
 
-                let child_pos = self.slot_map.get(child_key).map(|c| c.position);
+                let child_pos = self.slot_map.get(child_key).map(|c| c.position());
                 if let Some(pos) = child_pos {
                     queue.push_back((child_key, pos));
                 }
@@ -205,7 +256,10 @@ impl BulletSystem {
     }
 
     fn remove_from_parent_list(&mut self, key: BulletKey) {
-        let parent = self.slot_map.get(key).and_then(|b| b.parent);
+        let parent = match self.slot_map.get(key) {
+            Some(Bullet::Polar(polar)) => polar.parent,
+            _ => None,
+        };
 
         if let Some(parent_key) = parent {
             if let Some(siblings) = self.children_of.get_mut(&parent_key) {
@@ -217,8 +271,8 @@ impl BulletSystem {
     fn detach_children(&mut self, parent: BulletKey) {
         if let Some(children) = self.children_of.remove(&parent) {
             for child_key in children {
-                if let Some(bullet) = self.slot_map.get_mut(child_key) {
-                    bullet.parent = None;
+                if let Some(Bullet::Polar(polar)) = self.slot_map.get_mut(child_key) {
+                    polar.parent = None;
                 }
             }
         }

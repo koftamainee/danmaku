@@ -34,6 +34,12 @@ return {
 		-- LIFETIME:
 		-- lifetime        = nil                   -- number of frames bullet lives; nil = infinite
 		--
+		-- MOTION (optional movement modifier on top of base motion):
+		-- motion          = nil                   -- danmaku.motion.* object (see Motion section below)
+		--
+		-- CONTROLLED (opt-in per-frame callback):
+		-- on_update       = nil                   -- function(b, frame): called each frame for this bullet
+		--                                         -- b = bullet handle, frame = frames since spawn
 		-- Notes:
 		-- Bullets are dumb, engine handles movement and deletion.
 		-- If parent exists, x/y are ignored.
@@ -179,6 +185,78 @@ return {
 			})
 			danmaku.time.yield() -- Spawn one-by-one
 		end
+
+		danmaku.time.wait(120)
+
+		-- EXAMPLE 5: Sinusoidal motion - bullets wobble as they travel
+		center_x, center_y = 320, 200
+
+		for i = 1, 8 do
+			danmaku.bullet.spawn({
+				sprite = ctx.bullets.bullet_purple,
+				x = center_x,
+				y = center_y,
+				speed = 2,
+				angle = (2 * math.pi / 8) * i,
+				motion = danmaku.motion.sinusoidal(25, 0.08),
+			})
+		end
+
+		danmaku.time.wait(80)
+
+		-- EXAMPLE 6: Sinusoidal with phase offset - wave formation
+		center_x, center_y = 320, 200
+
+		for i = 1, 12 do
+			danmaku.bullet.spawn({
+				sprite = ctx.bullets.bullet_blue,
+				x = center_x,
+				y = center_y,
+				speed = 1.8,
+				angle = (2 * math.pi / 12) * i,
+				motion = danmaku.motion.sinusoidal(20, 0.1, (2 * math.pi / 12) * i),
+			})
+		end
+
+		danmaku.time.wait(80)
+
+		-- EXAMPLE 7: Lerp - bullet accelerates and curves
+		danmaku.bullet.spawn({
+			sprite = ctx.bullets.bullet_green,
+			x = 100,
+			y = 300,
+			speed = 0.5,
+			angle = 0,
+			angular_vel = 0.02,
+			motion = danmaku.motion.lerp({ speed = 4 }, 90, "quad_out"),
+		})
+
+		danmaku.time.wait(100)
+
+		-- EXAMPLE 8: Decelerate via accel + min_speed (no motion needed)
+		danmaku.bullet.spawn({
+			sprite = ctx.bullets.bullet_red,
+			x = 320,
+			y = 100,
+			speed = 6,
+			angle = math.pi / 2,
+			accel = -0.07,
+			min_speed = 0,
+		})
+
+		danmaku.time.wait(100)
+
+		-- EXAMPLE 9: Controlled bullet - engine does nothing, callback controls position
+		danmaku.bullet.spawn_controlled({
+			sprite = ctx.bullets.bullet_yellow,
+			x = 320,
+			y = 200,
+			on_update = function(b, frame)
+				local x = 320 + math.cos(frame * 0.03) * 100
+				local y = 200 + math.sin(frame * 0.05) * 50
+				b:set_position(x, y)
+			end,
+		})
 
 		danmaku.time.wait(120)
 	end,

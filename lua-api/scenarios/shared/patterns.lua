@@ -204,4 +204,45 @@ return {
             danmaku.time.yield()
         end
     end,
+
+    wavy_burst = function(danmaku, x, y, bullets, lifetime)
+        for i = 1, 16 do
+            danmaku.bullet.spawn({
+                sprite = bullets.bullet_purple,
+                x = x, y = y,
+                speed = 2.0,
+                angle = (2 * math.pi / 16) * i,
+                lifetime = lifetime,
+                motion = danmaku.motion.sinusoidal(20, 0.08, (2 * math.pi / 16) * i),
+            })
+        end
+        danmaku.time.wait(40)
+
+        for i = 1, 16 do
+            danmaku.bullet.spawn({
+                sprite = bullets.bullet_blue,
+                x = x, y = y,
+                speed = 2.0,
+                angle = (2 * math.pi / 16) * i + math.pi / 16,
+                lifetime = lifetime,
+                motion = danmaku.motion.sinusoidal(20, 0.08, (2 * math.pi / 16) * i),
+            })
+        end
+        danmaku.time.wait(40)
+    end,
+
+    decelerating_ring = function(danmaku, x, y, bullets, lifetime)
+        for i = 1, 24 do
+            danmaku.bullet.spawn({
+                sprite = bullets.bullet_cyan,
+                x = x, y = y,
+                speed = 5.0,
+                angle = (2 * math.pi / 24) * i,
+                accel = -0.08,
+                min_speed = 0.5,
+                lifetime = lifetime,
+            })
+        end
+        danmaku.time.wait(80)
+    end,
 }

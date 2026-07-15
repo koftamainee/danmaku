@@ -117,7 +117,7 @@ impl Game {
                             DrawParams {
                                 texture: atlas.texture(),
                                 source: Some(region.src()),
-                                position: bullet.position,
+                                position: bullet.position(),
                                 scale: Vec2::splat(3.0),
                                 color: Color::WHITE,
                                 ..DrawParams::new(atlas.texture())
