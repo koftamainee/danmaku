@@ -52,14 +52,14 @@ return {
         local num = danmaku.math.map_range(3, 0, 5, 0, 10) -- maps value from one range to another - (value, from_min, from_max, to_min, to_max)
 
         -- tween - interpolation
-        local t1 = danmaku.tween.linear(5)
-        local t2 = danmaku.tween.quad_in(5)
-        local t3 = danmaku.tween.quad_out(5)
-        local t4 = danmaku.tween.quad_in_out(5)
-        local t5 = danmaku.tween.cubic_in(5)
-        local t6 = danmaku.tween.cubic_out(5)
-        local t7 = danmaku.tween.bounce(5)
-        local t8 = danmaku.tween.elastic(5)
+        local t1 = danmaku.tween.linear(0.5)
+        local t2 = danmaku.tween.quad_in(0.5)
+        local t3 = danmaku.tween.quad_out(0.5)
+        local t4 = danmaku.tween.quad_in_out(0.5)
+        local t5 = danmaku.tween.cubic_in(0.5)
+        local t6 = danmaku.tween.cubic_out(0.5)
+        local t7 = danmaku.tween.bounce(0.5)
+        local t8 = danmaku.tween.elastic(0.5)
 
         -- bullet - bullet management functions
         local bullet = danmaku.bullet.spawn({--[[ bullet table ]]}) -- spawn and return new bullet 
