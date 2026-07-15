@@ -1,70 +1,99 @@
 use std::fmt;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Source {
+    Mod,
+    Scenario,
+}
+
+impl Source {
+    pub fn from_prefix(s: &str) -> Option<Self> {
+        match s {
+            "m" => Some(Source::Mod),
+            "s" => Some(Source::Scenario),
+            _ => None,
+        }
+    }
+
+    pub fn prefix(&self) -> &'static str {
+        match self {
+            Source::Mod => "m",
+            Source::Scenario => "s",
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AssetPath {
-    pub(crate) mod_id: ModId,
+    pub(crate) source: Source,
+    pub(crate) source_id: Box<str>,
     pub(crate) path: Box<str>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ModId(Box<str>);
-
-impl std::fmt::Display for ModId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
 impl AssetPath {
-    pub fn new(mod_id: impl Into<Box<str>>, path: impl Into<Box<str>>) -> Self {
+    pub fn new(source: Source, source_id: impl Into<Box<str>>, path: impl Into<Box<str>>) -> Self {
         Self {
-            mod_id: ModId(mod_id.into()),
+            source,
+            source_id: source_id.into(),
             path: path.into(),
         }
     }
-    pub fn parse(s: &str) -> Result<Self, AssetPathParseError> {
-        let (mod_id, path) = s
-            .split_once(':')
-            .ok_or(AssetPathParseError::MissingNamespace)?;
 
-        if mod_id.is_empty() {
-            return Err(AssetPathParseError::EmptyModId);
+    pub fn parse(s: &str) -> Result<Self, AssetPathParseError> {
+        let (prefix, rest) = s
+            .split_once(':')
+            .ok_or(AssetPathParseError::MissingSeparator)?;
+
+        let source = Source::from_prefix(prefix)
+            .ok_or(AssetPathParseError::UnknownSource(prefix.to_string()))?;
+
+        let (source_id, path) = rest
+            .split_once(':')
+            .ok_or(AssetPathParseError::MissingSeparator)?;
+
+        if source_id.is_empty() {
+            return Err(AssetPathParseError::EmptySourceId);
         }
         if path.is_empty() {
             return Err(AssetPathParseError::EmptyPath);
         }
 
-        Ok(Self::new(mod_id, path))
+        Ok(Self::new(source, source_id, path))
     }
 
-    pub fn mod_id(&self) -> &str {
-        &self.mod_id.0
+    pub fn source(&self) -> Source {
+        self.source
+    }
+
+    pub fn source_id(&self) -> &str {
+        &self.source_id
     }
 
     pub fn path(&self) -> &str {
         &self.path
     }
-
-    pub fn with_mod(&self, mod_id: impl Into<Box<str>>) -> Self {
-        Self {
-            mod_id: ModId(mod_id.into()),
-            path: self.path.clone(),
-        }
-    }
 }
 
 impl fmt::Display for AssetPath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}:{}", self.mod_id.0, self.path)
+        write!(
+            f,
+            "{}:{}:{}",
+            self.source.prefix(),
+            self.source_id,
+            self.path
+        )
     }
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum AssetPathParseError {
-    #[error("asset path is missing a mod namespace (expected 'mod_id:path')")]
-    MissingNamespace,
-    #[error("asset path has an empty mod id")]
-    EmptyModId,
-    #[error("asset path has an empty path")]
+    #[error("expected format 'source:id:path' (e.g. 's:base:assets/file.lua')")]
+    MissingSeparator,
+    #[error("unknown source type '{0}', expected 'm' or 's'")]
+    UnknownSource(String),
+    #[error("source id is empty")]
+    EmptySourceId,
+    #[error("path is empty")]
     EmptyPath,
 }

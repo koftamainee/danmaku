@@ -1,0 +1,9 @@
+[package]
+name = "assets"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+content = { path = "../content" }
+renderer = { path = "../renderer" }
+thiserror = "2.0.18"

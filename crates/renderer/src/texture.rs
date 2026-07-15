@@ -1,5 +1,4 @@
-use content::AssetPath;
-use crate::GraphicsDevice;
+use content::{Asset, AssetPath, Content};
 
 pub enum TextureFormat {
     Rgba8UnormSrgb,
@@ -13,11 +12,50 @@ pub struct TextureDescriptor<'a> {
     pub format: TextureFormat,
 }
 
+pub struct GpuTextureLoadContext<'a> {
+    pub gpu: &'a crate::GraphicsDevice,
+    pub label: Option<&'a str>,
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum GpuTextureError {
+    #[error("failed to read asset: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("failed to decode image: {0}")]
+    Image(#[from] image::ImageError),
+}
+
 pub struct GpuTexture {
     pub(crate) wgpu_texture: wgpu::Texture,
     pub(crate) view: wgpu::TextureView,
     pub(crate) width: u32,
     pub(crate) height: u32,
+}
+
+impl Asset for GpuTexture {
+    type Error = GpuTextureError;
+    type Context<'a> = GpuTextureLoadContext<'a>;
+
+    fn load(
+        content: &Content,
+        asset_path: &AssetPath,
+        ctx: Self::Context<'_>,
+    ) -> Result<Self, Self::Error> {
+        let bytes = content.read_asset_bytes(asset_path)?;
+        let img = image::load_from_memory(&bytes)?;
+        let rgba = img.to_rgba8();
+        let (w, h) = rgba.dimensions();
+        let gpu = ctx.gpu.create_texture(
+            TextureDescriptor {
+                label: ctx.label,
+                width: w,
+                height: h,
+                format: TextureFormat::Rgba8UnormSrgb,
+            },
+            Some(&rgba),
+        );
+        Ok(gpu)
+    }
 }
 
 impl GpuTexture {
@@ -38,52 +76,6 @@ impl GpuTexture {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
-pub enum TextureLoadError {
-    #[error("failed to decode image: {0}")]
-    ImageDecode(#[from] image::ImageError),
-}
-
-pub struct TextureLoadContext<'a> {
-    pub graphics_device: &'a GraphicsDevice,
-    pub label: Option<&'a str>,
-}
-
-impl<'a> From<&'a GraphicsDevice> for TextureLoadContext<'a> {
-    fn from(value: &'a GraphicsDevice) -> Self {
-        Self {
-            graphics_device: value,
-            label: None,
-        }
-    }
-}
-
-impl content::Asset for GpuTexture {
-    type Error = TextureLoadError;
-    type Context<'a> = TextureLoadContext<'a>;
-
-    fn load(data: &[u8], _asset_path: &AssetPath, context: Self::Context<'_>) -> Result<Self, Self::Error>
-    where
-        Self: Sized,
-    {
-        let img = image::load_from_memory(data)?;
-        let rgba = img.to_rgba8();
-        let (width, height) = rgba.dimensions();
-
-        let texture = context.graphics_device.create_texture(
-            TextureDescriptor {
-                label: context.label,
-                width,
-                height,
-                format: TextureFormat::Rgba8UnormSrgb,
-            },
-            Some(&rgba),
-        );
-
-        Ok(texture)
-    }
-}
-
 #[derive(Clone, Copy)]
 pub struct Rect {
     pub x: f32,
@@ -94,12 +86,24 @@ pub struct Rect {
 
 impl Rect {
     pub const fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
-        Self { x, y, width, height }
+        Self {
+            x,
+            y,
+            width,
+            height,
+        }
     }
 }
 
 #[derive(Clone, Copy)]
 pub enum Hitbox {
-    Circle { radius: f32, origin: [f32; 2] },
-    Rect { width: f32, height: f32, origin: [f32; 2] },
+    Circle {
+        radius: f32,
+        origin: [f32; 2],
+    },
+    Rect {
+        width: f32,
+        height: f32,
+        origin: [f32; 2],
+    },
 }

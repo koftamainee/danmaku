@@ -1,11 +1,8 @@
 use std::sync::Arc;
-use content::{AssetPath, Content, Handle};
-use core::bullet::Bullet;
-use glam::Vec2;
+use content::Content;
 use renderer::{
-    Atlas, BlendMode, Camera, Color, DrawParams, FilterMode, GraphicsDevice,
-    OrthographicCamera, Rect, RendererError, SpriteBatch, BeginParams,
-    AtlasLoadContext, Region,
+    BlendMode, Camera, Color, FilterMode, GraphicsDevice,
+    OrthographicCamera, RendererError, SpriteBatch, BeginParams,
 };
 use winit::{
     application::ApplicationHandler,
@@ -23,54 +20,12 @@ struct Game {
     content: Content,
     camera: OrthographicCamera,
     sprite_batch: SpriteBatch,
-
-    bullet_system: core::bullet::BulletSystem,
-    bullet_atlas_key: slotmap::DefaultKey,
-
     tick: u32,
 }
 
 impl Game {
     fn update(&mut self) {
-        self.bullet_system.update();
         self.tick = self.tick.wrapping_add(1);
-
-        let bullet_yellow =
-            core::sprite_handle::SpriteHandle::from_atlas(self.bullet_atlas_key, 9);
-        let bullet_orange =
-            core::sprite_handle::SpriteHandle::from_atlas(self.bullet_atlas_key, 10);
-        let bullet_red =
-            core::sprite_handle::SpriteHandle::from_atlas(self.bullet_atlas_key, 2);
-
-        let angle_offset = self.tick as f32 * 0.12;
-        for arm in 0..6 {
-            let a = angle_offset + arm as f32 * std::f32::consts::PI / 3.0;
-            self.bullet_system.spawn(
-                Bullet::root(0.0, 0.0, bullet_yellow)
-                    .speed(2.0)
-                    .angle(a)
-                    .angular_velocity(0.03)
-                    .lifetime(500)
-                    .build(),
-            );
-            self.bullet_system.spawn(
-                Bullet::root(0.0, 0.0, bullet_orange)
-                    .speed(2.5)
-                    .angle(a)
-                    .angular_velocity(0.03)
-                    .lifetime(500)
-                    .build(),
-            );
-            self.bullet_system.spawn(
-                Bullet::root(0.0, 0.0, bullet_red)
-                    .speed(3.0)
-                    .angle(a)
-                    .angular_velocity(0.03)
-                    .angular_acceleration(-0.0003)
-                    .lifetime(500)
-                    .build(),
-            );
-        }
     }
 
     fn render(&mut self) {
@@ -102,30 +57,6 @@ impl Game {
                 sampler: FilterMode::Nearest,
             },
         );
-
-        for instance in self.bullet_system.render_instances() {
-            match instance.sprite {
-                core::sprite_handle::SpriteHandle::Atlas { key, index } => {
-                    let handle = Handle::<Atlas>::from_key(key);
-                    if let Some(atlas) = self.content.get(handle) {
-                        let region = &atlas.regions[index as usize];
-                        self.sprite_batch.draw(
-                            &self.graphics_device,
-                            DrawParams {
-                                texture: &atlas.gpu,
-                                source: Some(region.src),
-                                position: instance.position,
-                                rotation: instance.rotation,
-                                scale: Vec2::splat(3.0),
-                                color: Color::WHITE,
-                                ..DrawParams::new(&atlas.gpu)
-                            },
-                        );
-                    }
-                }
-                core::sprite_handle::SpriteHandle::Texture { key: _ } => {}
-            }
-        }
 
         self.sprite_batch
             .end(&self.graphics_device, &mut frame)
@@ -172,44 +103,11 @@ impl ApplicationHandler for App {
                 ))
                 .expect("failed to create renderer");
 
-                let mut content = Content::new();
-
-                let bullet_atlas_key = {
-                    let regions: Vec<Region> = vec![
-                        Region { src: Rect::new(0.0, 48.0, 16.0, 16.0), hitbox: None },
-                        Region { src: Rect::new(16.0, 48.0, 16.0, 16.0), hitbox: None },
-                        Region { src: Rect::new(32.0, 48.0, 16.0, 16.0), hitbox: None },
-                        Region { src: Rect::new(48.0, 48.0, 16.0, 16.0), hitbox: None },
-                        Region { src: Rect::new(64.0, 48.0, 16.0, 16.0), hitbox: None },
-                        Region { src: Rect::new(80.0, 48.0, 16.0, 16.0), hitbox: None },
-                        Region { src: Rect::new(96.0, 48.0, 16.0, 16.0), hitbox: None },
-                        Region { src: Rect::new(112.0, 48.0, 16.0, 16.0), hitbox: None },
-                        Region { src: Rect::new(128.0, 48.0, 16.0, 16.0), hitbox: None },
-                        Region { src: Rect::new(144.0, 48.0, 16.0, 16.0), hitbox: None },
-                        Region { src: Rect::new(160.0, 48.0, 16.0, 16.0), hitbox: None },
-                        Region { src: Rect::new(176.0, 48.0, 16.0, 16.0), hitbox: None },
-                    ];
-                    let bullet_atlas_name = "base:assets/EoSD_bullets.png";
-                    let handle = content
-                        .load::<Atlas>(
-                            &AssetPath::parse(bullet_atlas_name).unwrap(),
-                            AtlasLoadContext {
-                                gpu: &graphics_device,
-                                regions,
-                                label: Some("Bullet atlas"),
-                            },
-                        )
-                        .unwrap();
-                    handle.key()
-                };
-
+                let content = Content::new();
                 let camera = OrthographicCamera::default();
 
                 let sprite_batch =
                     SpriteBatch::new(&graphics_device).expect("failed to create sprite batch");
-
-                let bullet_system =
-                    core::bullet::BulletSystem::new(30000, Vec2::new(WORLD_W, WORLD_H));
 
                 *self = App::Running(Game {
                     window,
@@ -217,8 +115,6 @@ impl ApplicationHandler for App {
                     content,
                     camera,
                     sprite_batch,
-                    bullet_system,
-                    bullet_atlas_key,
                     tick: 0,
                 });
             }

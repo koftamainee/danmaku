@@ -5,6 +5,7 @@ members = [
     "crates/core",
     "crates/renderer",
     "crates/scripting",
+    "crates/assets",
     "apps/game",
     "crates/content",
 ]

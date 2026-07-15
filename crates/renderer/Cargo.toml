@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-content = {path = "../../crates/content"}
+content = { path = "../content" }
 glam = { version = "0.33.2", features = ["bytemuck"] }
 bytemuck = { version = "1", features = ["derive"] }
-image = "0.25.10"
+image = "0.25"
 thiserror = "2.0.18"
 wgpu = "30.0.0"
