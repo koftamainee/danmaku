@@ -33,7 +33,7 @@ return {
         local angle = danmaku.rng.angle() -- generates random angle from 0 to 2 pi
         local angle = danmaku.rng.angle_range(0, math.pi) -- generates random angle in range
         local boolean = danmaku.rng.bool() -- generates random bool
-        local element = danmaku.rng.choise({1, 2, 3}) -- choose random element from list
+        local element = danmaku.rng.choice({1, 2, 3}) -- choose random element from list
         danmaku.rng.shuffle({1, 2, 3}) -- shuffles list in place
         local sample = danmaku.rng.sample({1, 2, 3}, 2) -- returns new table with 2 random elements from list
         local direction = danmaku.rng.direction() -- returns random normalized direction
@@ -63,8 +63,9 @@ return {
 
         -- bullet - bullet management functions
         local bullet = danmaku.bullet.spawn({--[[ bullet table ]]}) -- spawn and return new bullet 
+        local bullets = danmaku.bullet.spawn_batch({--[[ array of bullet tables ]]}) -- spawn and return array of bullets
         local bullets_count = danmaku.bullet.count() -- current bullet count in bullet system
-        local bullets = danmaku.bullet.get_all(); -- returns all active bullets
+        local bullets_get = danmaku.bullet.get_all(); -- returns all active bullets
 
         -- utils
         danmaku.utils.map({1, 2, 3}, function(x) return x + 1 end) -- apply function on all values in list
