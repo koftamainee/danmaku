@@ -2,7 +2,7 @@ return {
     type = "stage",
 
     prepare = function(danmaku, ctx)
-        ctx.bullets =  danmaku.content.load_spritesheet("assets/EoSD_bullets.lua")
+        ctx.bullets =  danmaku.content.load_spritesheet("assets/EoSD_bullets")
     end
 
 	run = function(danmaku, ctx)
