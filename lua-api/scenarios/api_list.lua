@@ -3,7 +3,9 @@ return {
         -- global namespace - project structure function
         danmaku.log("prints the message")
         local module = danmaku.import("path/to/module.lua") -- imports module type file
-        danmaku.load_stage("path/to/stage.lua") -- loads stage (blocking)
+        
+        -- stage - stage management
+        danmaku.stage.load("path/to/stage.lua") -- loads stage (blocking)
 
 
         -- content - loads and manage assets
