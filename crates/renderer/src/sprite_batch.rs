@@ -110,6 +110,7 @@ impl std::ops::BitOr for SpriteEffects {
 pub struct BatchStats {
     pub draw_calls: u32,
     pub sprites: u32,
+    pub render_passes: u32,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -355,6 +356,7 @@ impl SpriteBatch {
             return Ok(BatchStats {
                 draw_calls: 0,
                 sprites: 0,
+                render_passes: 0,
             });
         }
 
@@ -406,6 +408,7 @@ impl SpriteBatch {
         let stats = BatchStats {
             draw_calls: groups.len() as u32,
             sprites: sprite_count,
+            render_passes: 1,
         };
 
         self.pending_ids.clear();

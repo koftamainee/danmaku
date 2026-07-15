@@ -2,7 +2,7 @@ use crate::asset_path::{AssetPath, Source};
 use crate::cache::{AnyCache, TypedCache};
 use crate::{Asset, Handle};
 use std::any::TypeId;
-use std::cell::UnsafeCell;
+use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::io;
 use std::marker::PhantomData;
@@ -32,14 +32,14 @@ impl AssetReader {
 
 pub struct Content {
     reader: AssetReader,
-    caches: UnsafeCell<HashMap<TypeId, Box<dyn AnyCache>>>,
+    caches: RefCell<HashMap<TypeId, Box<dyn AnyCache>>>,
 }
 
 impl Content {
     pub fn new() -> Self {
         Self {
             reader: AssetReader::new(),
-            caches: UnsafeCell::new(HashMap::new()),
+            caches: RefCell::new(HashMap::new()),
         }
     }
 
@@ -54,7 +54,7 @@ impl Content {
         context: T::Context<'_>,
     ) -> Result<Handle<T>, LoadError<T::Error>> {
         {
-            let caches = unsafe { &*self.caches.get() };
+            let caches = self.caches.borrow();
             if let Some(handle) = caches
                 .get(&TypeId::of::<T>())
                 .and_then(|c| c.as_any().downcast_ref::<TypedCache<T>>())
@@ -66,8 +66,7 @@ impl Content {
 
         let asset = T::load(self, asset_path, context).map_err(LoadError::Asset)?;
 
-        // SAFETY: single-threaded access, no concurrent loads of the same type.
-        let caches = unsafe { &mut *self.caches.get() };
+        let mut caches = self.caches.borrow_mut();
         let cache = caches
             .entry(TypeId::of::<T>())
             .or_insert_with(|| Box::new(TypedCache::<T>::new()))
@@ -87,14 +86,19 @@ impl Content {
         Ok(handle)
     }
 
-    pub fn get<T: Asset>(&self, handle: Handle<T>) -> Option<&T> {
-        let caches = unsafe { &*self.caches.get() };
-        caches
-            .get(&TypeId::of::<T>())?
-            .as_any()
-            .downcast_ref::<TypedCache<T>>()?
-            .storage
-            .get(handle.key)
+    pub fn get<T: Asset>(&self, handle: Handle<T>) -> Ref<'_, T> {
+        let caches = self.caches.borrow();
+        Ref::map(caches, |caches| {
+            caches
+                .get(&TypeId::of::<T>())
+                .expect("asset type not registered")
+                .as_any()
+                .downcast_ref::<TypedCache<T>>()
+                .expect("type downcast failed")
+                .storage
+                .get(handle.key)
+                .expect("invalid handle")
+        })
     }
 
     pub fn get_mut<T: Asset>(&mut self, handle: Handle<T>) -> Option<&mut T> {

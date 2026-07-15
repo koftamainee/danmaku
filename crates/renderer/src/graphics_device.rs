@@ -23,6 +23,7 @@ pub struct Frame {
     texture_view: wgpu::TextureView,
     encoder: wgpu::CommandEncoder,
     clear_color: Option<wgpu::Color>,
+    pass_count: u32,
 }
 
 impl GraphicsDevice {
@@ -124,10 +125,31 @@ impl GraphicsDevice {
             texture_view,
             encoder,
             clear_color: None,
+            pass_count: 0,
         })
     }
 
     pub fn end_frame(&mut self, frame: Frame) {
+        let mut frame = frame;
+        if frame.pass_count == 0 {
+            if let Some(color) = frame.clear_color.take() {
+                let pass = frame.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    label: None,
+                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                        view: &frame.texture_view,
+                        resolve_target: None,
+                        depth_slice: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(color),
+                            store: wgpu::StoreOp::Store,
+                        },
+                    })],
+                    depth_stencil_attachment: None,
+                    ..Default::default()
+                });
+                drop(pass);
+            }
+        }
         self.queue.submit(std::iter::once(frame.encoder.finish()));
         self.queue.present(frame.surface_texture);
     }
@@ -464,6 +486,7 @@ impl Frame {
     }
 
     pub fn begin_pass(&mut self) -> RenderPass<'_> {
+        self.pass_count += 1;
         let load_op = match self.clear_color.take() {
             Some(color) => wgpu::LoadOp::Clear(color),
             None => wgpu::LoadOp::Load,
