@@ -1,8 +1,8 @@
 return {
-    type = "stage"
+    type = "stage",
 
     prepare = function(danmaku, ctx)
-        ctx.bullets =  danmaku.content.load_spritesheet("assets/EoSD_bullets.png")
+        ctx.bullets =  danmaku.content.load_spritesheet("assets/EoSD_bullets.lua")
     end
 
 	run = function(danmaku, ctx)
