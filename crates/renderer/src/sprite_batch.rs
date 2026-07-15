@@ -43,10 +43,10 @@ pub struct SpriteBatch {
     globals_bind_group: BindGroup,
     pipelines: [Option<Pipeline>; 3],
 
-    pending_ids: Vec<usize>,
+    pending_ids: Vec<u64>,
     pending_data: Vec<InstanceData>,
 
-    texture_cache: HashMap<usize, BindGroup>,
+    texture_cache: HashMap<u64, BindGroup>,
 
     is_batching: bool,
     current_blend: pipeline::BlendMode,
@@ -323,7 +323,7 @@ impl SpriteBatch {
         });
     }
 
-    fn group_consecutive(ids: &[usize]) -> Vec<(usize, u32)> {
+    fn group_consecutive(ids: &[u64]) -> Vec<(u64, u32)> {
         if ids.is_empty() {
             return Vec::new();
         }
@@ -417,12 +417,16 @@ impl SpriteBatch {
         Ok(stats)
     }
 
-    fn ensure_bind_group(&mut self, gd: &GraphicsDevice, tex_id: usize, texture: &GpuTexture) {
+    fn ensure_bind_group(&mut self, gd: &GraphicsDevice, tex_id: u64, texture: &GpuTexture) {
         if !self.texture_cache.contains_key(&tex_id) {
             let bind_group = gd.create_bind_group(Some("SpriteBatch texture"), &[
                 BindGroupEntry::Texture { texture, sampler: &self.current_sampler },
             ]);
             self.texture_cache.insert(tex_id, bind_group);
         }
+    }
+
+    pub fn remove_cached_bind_group(&mut self, texture_id: u64) {
+        self.texture_cache.remove(&texture_id);
     }
 }

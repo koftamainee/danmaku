@@ -1,3 +1,5 @@
+use std::sync::atomic::{AtomicU64, Ordering};
+
 use crate::error::RendererError;
 use crate::color::Color;
 use crate::texture::{GpuTexture, TextureDescriptor};
@@ -16,6 +18,8 @@ pub struct GraphicsDevice {
     adapter: wgpu::Adapter,
     device: wgpu::Device,
     queue: wgpu::Queue,
+
+    next_texture_id: AtomicU64,
 }
 
 pub struct Frame {
@@ -81,6 +85,8 @@ impl GraphicsDevice {
             adapter,
             device,
             queue,
+
+            next_texture_id: AtomicU64::new(1),
         })
     }
 
@@ -223,6 +229,7 @@ impl GraphicsDevice {
         let view = wgpu_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         GpuTexture {
+            id: self.next_texture_id.fetch_add(1, Ordering::Relaxed),
             wgpu_texture,
             view,
             width: desc.width,

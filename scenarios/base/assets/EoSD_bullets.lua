@@ -1,6 +1,6 @@
 -- This file is generated. Do not edit.
 return {
-    type = "spritesheet.gen"
+    type = "spritesheet.gen",
 
     texture = "EoSD_bullets.png",
     sprites = {

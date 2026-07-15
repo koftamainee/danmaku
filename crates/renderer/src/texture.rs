@@ -26,6 +26,7 @@ pub enum GpuTextureError {
 }
 
 pub struct GpuTexture {
+    pub(crate) id: u64,
     pub(crate) wgpu_texture: wgpu::Texture,
     pub(crate) view: wgpu::TextureView,
     pub(crate) width: u32,
@@ -67,12 +68,8 @@ impl GpuTexture {
         self.height
     }
 
-    pub fn global_id(&self) -> u64 {
-        std::ptr::from_ref(&self.wgpu_texture) as u64
-    }
-
-    pub fn id(&self) -> usize {
-        self as *const Self as usize
+    pub fn id(&self) -> u64 {
+        self.id
     }
 }
 
