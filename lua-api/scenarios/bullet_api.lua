@@ -16,28 +16,29 @@ return {
 		-- VELOCITY (polar coordinates):
 		-- speed           = 0                     -- number, px/frame: initial speed along angle
 		-- accel           = 0                     -- number, px/frame^2: acceleration along current angle
-		-- min_speed       = nil                   -- number, px/frame: minimum speed
-		-- max_speed       = nil                   -- number, px/frame: maximum speed
+		-- min_speed       = nil                   -- number, px/frame: minimum speed (nil = no clamp)
+		-- max_speed       = nil                   -- number, px/frame: maximum speed (nil = no clamp)
 		--
 		-- ANGLE & ROTATION:
 		-- angle           = 0                     -- number, radians: initial movement angle
 		-- angle_type      = danmaku.angle.absolute -- absolute | relative | player: how angle is interpreted
 		-- angular_vel     = 0                     -- number, radians/frame: rotational velocity
 		-- angular_accel   = 0                     -- number, radians/frame^2: rotational acceleration
-		-- min_angular_vel = nil                   -- number, radians/frame: minimum angular velocity
-		-- max_angular_vel = nil                   -- number, radians/frame: maximum angular velocity
+		-- min_angular_vel = nil                   -- number, radians/frame: minimum angular velocity (nil = no clamp)
+		-- max_angular_vel = nil                   -- number, radians/frame: maximum angular velocity (nil = no clamp)
 		--
 		-- HIERARCHY:
 		-- parent          = nil                   -- optional bullet handle: attach bullet to another bullet
 		-- parent_offset   = nil                   -- table {x=0, y=0}: offset relative to parent if attached
 		--
 		-- LIFETIME:
-		-- lifetime        = -1                    -- number of frames bullet lives; -1 = infinite
+		-- lifetime        = nil                   -- number of frames bullet lives; nil = infinite
 		--
 		-- Notes:
 		-- Bullets are dumb, engine handles movement and deletion.
 		-- If parent exists, x/y are ignored.
 		-- Child bullets follow parent transform if attached.
+		-- When parent dies, child becomes independent root bullet and continues flying.
 
 		-- Fire a simple bullet immediately
 		local a = danmaku.bullet.spawn({

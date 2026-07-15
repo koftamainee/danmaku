@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use content::{AssetPath, Content, Handle};
-use core::bullet::{Bullet, BulletKey, BulletKind};
+use core::bullet::{Bullet, BulletKey};
 use glam::Vec2;
 use renderer::{
     Atlas, BlendMode, Camera, Color, DrawParams, FilterMode, GraphicsDevice,
@@ -45,21 +45,15 @@ impl Game {
         angular_vel: f32,
         angular_accel: f32,
     ) {
-        let key = self.bullet_system.spawn(Bullet {
-            position,
-            lifetime: 500,
-            kind: BulletKind::Root {
-                speed,
-                acceleration: 0.0,
-                min_speed: 0.0,
-                max_speed: 0.0,
-                angle,
-                angular_velocity: angular_vel,
-                angular_acceleration: angular_accel,
-                min_angular_velocity: 0.0,
-                max_angular_velocity: 0.0,
-            },
-        });
+        let key = self.bullet_system.spawn(
+            Bullet::root(position.x, position.y)
+                .speed(speed)
+                .angle(angle)
+                .angular_velocity(angular_vel)
+                .angular_acceleration(angular_accel)
+                .lifetime(500)
+                .build(),
+        );
 
         self.visuals.insert(
             key,

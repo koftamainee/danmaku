@@ -24,7 +24,7 @@ return {
             danmaku.rng.shuffle(ctx.patterns)
 
             for _, pattern in ipairs(ctx.patterns) do
-                pattern(danmaku, 320, 100, ctx.bulltes, base_lifetime)
+                pattern(danmaku, 320, 100, ctx.bullets, base_lifetime)
                 danmaku.time.wait(20)
             end
             danmaku.time.wait(40)
