@@ -38,15 +38,15 @@ impl<'a> ScriptApi<'a> {
     }
 
     pub fn rng_float(&mut self) -> f32 {
-        self.rng.next_f32()
+        self.rng.next()
     }
 
     pub fn rng_rangef(&mut self, min: f32, max: f32) -> f32 {
-        self.rng.range_f32(min, max)
+        self.rng.range(min, max)
     }
 
     pub fn rng_rangei(&mut self, min: i32, max: i32) -> i32 {
-        self.rng.range_i32(min, max)
+        self.rng.range(min, max)
     }
 
     pub fn rng_angle(&mut self) -> f32 {
@@ -54,7 +54,7 @@ impl<'a> ScriptApi<'a> {
     }
 
     pub fn rng_angle_range(&mut self, min: f32, max: f32) -> f32 {
-        self.rng.range_f32(min, max)
+        self.rng.range(min, max)
     }
 
     pub fn rng_bool(&mut self) -> bool {
