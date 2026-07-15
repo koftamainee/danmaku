@@ -1,6 +1,6 @@
 use crate::error::RendererError;
 use crate::color::Color;
-use crate::texture::{Texture, TextureDescriptor};
+use crate::texture::{GpuTexture, TextureDescriptor};
 use crate::buffer::{BufferDescriptor, Buffer};
 use crate::sampler::{SamplerDescriptor, Sampler};
 use crate::pipeline::{PipelineDescriptor, Pipeline};
@@ -157,7 +157,7 @@ impl GraphicsDevice {
         self.queue.write_buffer(&buffer.wgpu_buffer, offset, data);
     }
 
-    pub fn create_texture(&self, desc: TextureDescriptor, data: Option<&[u8]>) -> Texture {
+    pub fn create_texture(&self, desc: TextureDescriptor, data: Option<&[u8]>) -> GpuTexture {
         let wgpu_format = match desc.format {
             crate::texture::TextureFormat::Rgba8UnormSrgb => wgpu::TextureFormat::Rgba8UnormSrgb,
             crate::texture::TextureFormat::Rgba8Unorm => wgpu::TextureFormat::Rgba8Unorm,
@@ -200,7 +200,7 @@ impl GraphicsDevice {
 
         let view = wgpu_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
-        Texture {
+        GpuTexture {
             wgpu_texture,
             view,
             width: desc.width,

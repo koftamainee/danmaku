@@ -13,14 +13,14 @@ pub struct TextureDescriptor<'a> {
     pub format: TextureFormat,
 }
 
-pub struct Texture {
+pub struct GpuTexture {
     pub(crate) wgpu_texture: wgpu::Texture,
     pub(crate) view: wgpu::TextureView,
     pub(crate) width: u32,
     pub(crate) height: u32,
 }
 
-impl Texture {
+impl GpuTexture {
     pub fn width(&self) -> u32 {
         self.width
     }
@@ -58,7 +58,7 @@ impl<'a> From<&'a GraphicsDevice> for TextureLoadContext<'a> {
     }
 }
 
-impl content::Asset for Texture {
+impl content::Asset for GpuTexture {
     type Error = TextureLoadError;
     type Context<'a> = TextureLoadContext<'a>;
 
@@ -96,4 +96,10 @@ impl Rect {
     pub const fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
         Self { x, y, width, height }
     }
+}
+
+#[derive(Clone, Copy)]
+pub enum Hitbox {
+    Circle { radius: f32, origin: [f32; 2] },
+    Rect { width: f32, height: f32, origin: [f32; 2] },
 }

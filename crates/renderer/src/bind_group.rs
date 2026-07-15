@@ -1,10 +1,10 @@
-use crate::texture::Texture;
+use crate::texture::GpuTexture;
 use crate::buffer::Buffer;
 use crate::sampler::Sampler;
 
 pub enum BindGroupEntry<'a> {
     Texture {
-        texture: &'a Texture,
+        texture: &'a GpuTexture,
         sampler: &'a Sampler,
     },
     UniformBuffer {

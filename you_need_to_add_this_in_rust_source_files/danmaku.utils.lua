@@ -1,7 +1,7 @@
--- recursive function shold be outside of return
-local table_deep_copy(table)
+-- recursive function should be outside of return
+local function table_deep_copy(tbl)
     local copy = {}
-    for key, value in pairs(table) do
+    for key, value in pairs(tbl) do
         if type(value) == "table" then
             copy[key] = table_deep_copy(value)
         else
@@ -19,9 +19,9 @@ return {
         return array
     end,
 
-    table_copy = function(table)
+    table_copy = function(tbl)
         local copy = {}
-        for key, value in pairs(table) do
+        for key, value in pairs(tbl) do
             copy[key] = value
         end
         return copy
@@ -29,17 +29,17 @@ return {
 
     table_deep_copy = table_deep_copy,
 
-    table_keys = function(table)
+    table_keys = function(tbl)
         local keys = {}
-        for key, _ in pairs(table) do
+        for key, _ in pairs(tbl) do
             table.insert(keys, key)
         end
         return keys
     end,
 
-    table_values = function(table)
+    table_values = function(tbl)
         local values = {}
-        for _, value in pairs(table) do
+        for _, value in pairs(tbl) do
             table.insert(values, value)
         end
         return values

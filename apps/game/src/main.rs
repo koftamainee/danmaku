@@ -1,11 +1,11 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 use content::{AssetPath, Content, Handle};
-use core::bullet::{Bullet, BulletKey};
+use core::bullet::Bullet;
 use glam::Vec2;
 use renderer::{
     Atlas, BlendMode, Camera, Color, DrawParams, FilterMode, GraphicsDevice,
-    OrthographicCamera, RendererError, SpriteBatch, BeginParams,
+    OrthographicCamera, Rect, RendererError, SpriteBatch, BeginParams,
+    AtlasLoadContext, Region,
 };
 use winit::{
     application::ApplicationHandler,
@@ -17,10 +17,6 @@ use winit::{
 const WORLD_W: f32 = 640.0;
 const WORLD_H: f32 = 480.0;
 
-struct VisualData {
-    sprite_name: String,
-}
-
 struct Game {
     window: Arc<Window>,
     graphics_device: GraphicsDevice,
@@ -29,51 +25,52 @@ struct Game {
     sprite_batch: SpriteBatch,
 
     bullet_system: core::bullet::BulletSystem,
-    bullet_atlas: Handle<Atlas>,
-    visuals: HashMap<BulletKey, VisualData>,
+    bullet_atlas_key: slotmap::DefaultKey,
 
     tick: u32,
 }
 
 impl Game {
-    fn spawn_bullet(
-        &mut self,
-        sprite_name: &str,
-        position: Vec2,
-        angle: f32,
-        speed: f32,
-        angular_vel: f32,
-        angular_accel: f32,
-    ) {
-        let key = self.bullet_system.spawn(
-            Bullet::root(position.x, position.y)
-                .speed(speed)
-                .angle(angle)
-                .angular_velocity(angular_vel)
-                .angular_acceleration(angular_accel)
-                .lifetime(500)
-                .build(),
-        );
-
-        self.visuals.insert(
-            key,
-            VisualData {
-                sprite_name: sprite_name.to_string(),
-            },
-        );
-    }
-
     fn update(&mut self) {
         self.bullet_system.update();
         self.tick = self.tick.wrapping_add(1);
 
-            let angle_offset = self.tick as f32 * 0.12;
-            for arm in 0..6 {
-                let a = angle_offset + arm as f32 * std::f32::consts::PI / 3.0;
-                self.spawn_bullet("bullet_yellow", Vec2::ZERO, a, 2.0, 0.03, 0.0);
-                self.spawn_bullet("bullet_orange", Vec2::ZERO, a, 2.5, 0.03, 0.0);
-                self.spawn_bullet("bullet_red", Vec2::ZERO, a, 3.0, 0.03, -0.0003);
-            }
+        let bullet_yellow =
+            core::sprite_handle::SpriteHandle::from_atlas(self.bullet_atlas_key, 9);
+        let bullet_orange =
+            core::sprite_handle::SpriteHandle::from_atlas(self.bullet_atlas_key, 10);
+        let bullet_red =
+            core::sprite_handle::SpriteHandle::from_atlas(self.bullet_atlas_key, 2);
+
+        let angle_offset = self.tick as f32 * 0.12;
+        for arm in 0..6 {
+            let a = angle_offset + arm as f32 * std::f32::consts::PI / 3.0;
+            self.bullet_system.spawn(
+                Bullet::root(0.0, 0.0, bullet_yellow)
+                    .speed(2.0)
+                    .angle(a)
+                    .angular_velocity(0.03)
+                    .lifetime(500)
+                    .build(),
+            );
+            self.bullet_system.spawn(
+                Bullet::root(0.0, 0.0, bullet_orange)
+                    .speed(2.5)
+                    .angle(a)
+                    .angular_velocity(0.03)
+                    .lifetime(500)
+                    .build(),
+            );
+            self.bullet_system.spawn(
+                Bullet::root(0.0, 0.0, bullet_red)
+                    .speed(3.0)
+                    .angle(a)
+                    .angular_velocity(0.03)
+                    .angular_acceleration(-0.0003)
+                    .lifetime(500)
+                    .build(),
+            );
+        }
     }
 
     fn render(&mut self) {
@@ -106,25 +103,27 @@ impl Game {
             },
         );
 
-        let atlas = self.content.get(self.bullet_atlas).unwrap();
-
-        for key in self.bullet_system.render_order() {
-            if let Some(bullet) = self.bullet_system.get(*key) {
-                if let Some(vis) = self.visuals.get(key) {
-                    if let Some(region) = atlas.get(&vis.sprite_name) {
+        for instance in self.bullet_system.render_instances() {
+            match instance.sprite {
+                core::sprite_handle::SpriteHandle::Atlas { key, index } => {
+                    let handle = Handle::<Atlas>::from_key(key);
+                    if let Some(atlas) = self.content.get(handle) {
+                        let region = &atlas.regions[index as usize];
                         self.sprite_batch.draw(
                             &self.graphics_device,
                             DrawParams {
-                                texture: atlas.texture(),
-                                source: Some(region.src()),
-                                position: bullet.position(),
+                                texture: &atlas.gpu,
+                                source: Some(region.src),
+                                position: instance.position,
+                                rotation: instance.rotation,
                                 scale: Vec2::splat(3.0),
                                 color: Color::WHITE,
-                                ..DrawParams::new(atlas.texture())
+                                ..DrawParams::new(&atlas.gpu)
                             },
                         );
                     }
                 }
+                core::sprite_handle::SpriteHandle::Texture { key: _ } => {}
             }
         }
 
@@ -175,11 +174,33 @@ impl ApplicationHandler for App {
 
                 let mut content = Content::new();
 
-                let atlas_path =
-                    AssetPath::parse("base:bullets/EoSD_bullets.json").expect("invalid path");
-                let bullet_atlas = content
-                    .load::<Atlas>(&atlas_path, (&graphics_device).into())
-                    .expect("failed to load atlas");
+                let bullet_atlas_key = {
+                    let regions: Vec<Region> = vec![
+                        Region { src: Rect::new(0.0, 48.0, 16.0, 16.0), hitbox: None },
+                        Region { src: Rect::new(16.0, 48.0, 16.0, 16.0), hitbox: None },
+                        Region { src: Rect::new(32.0, 48.0, 16.0, 16.0), hitbox: None },
+                        Region { src: Rect::new(48.0, 48.0, 16.0, 16.0), hitbox: None },
+                        Region { src: Rect::new(64.0, 48.0, 16.0, 16.0), hitbox: None },
+                        Region { src: Rect::new(80.0, 48.0, 16.0, 16.0), hitbox: None },
+                        Region { src: Rect::new(96.0, 48.0, 16.0, 16.0), hitbox: None },
+                        Region { src: Rect::new(112.0, 48.0, 16.0, 16.0), hitbox: None },
+                        Region { src: Rect::new(128.0, 48.0, 16.0, 16.0), hitbox: None },
+                        Region { src: Rect::new(144.0, 48.0, 16.0, 16.0), hitbox: None },
+                        Region { src: Rect::new(160.0, 48.0, 16.0, 16.0), hitbox: None },
+                        Region { src: Rect::new(176.0, 48.0, 16.0, 16.0), hitbox: None },
+                    ];
+                    let handle = content
+                        .load::<Atlas>(
+                            &AssetPath::parse("base:bullets/EoSD_bullets.png").unwrap(),
+                            AtlasLoadContext {
+                                gpu: &graphics_device,
+                                regions,
+                                label: Some("Bullet atlas"),
+                            },
+                        )
+                        .unwrap();
+                    handle.key()
+                };
 
                 let camera = OrthographicCamera::default();
 
@@ -196,8 +217,7 @@ impl ApplicationHandler for App {
                     camera,
                     sprite_batch,
                     bullet_system,
-                    bullet_atlas,
-                    visuals: HashMap::new(),
+                    bullet_atlas_key,
                     tick: 0,
                 });
             }

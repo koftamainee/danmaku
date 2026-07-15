@@ -9,7 +9,7 @@ use crate::error::RendererError;
 use crate::graphics_device::Frame;
 use crate::pipeline::{self, BlendMode, Pipeline, PipelineDescriptor, StepMode, VertexAttribute, VertexFormat, VertexLayout};
 use crate::sampler::{AddressMode, FilterMode, Sampler, SamplerDescriptor};
-use crate::texture::{Rect, Texture};
+use crate::texture::{Rect, GpuTexture};
 use crate::GraphicsDevice;
 use crate::BATCH_SHADER;
 
@@ -62,7 +62,7 @@ pub struct BeginParams {
 }
 
 pub struct DrawParams<'a> {
-    pub texture: &'a Texture,
+    pub texture: &'a GpuTexture,
     pub source: Option<Rect>,
     pub position: Vec2,
     pub origin: Option<Vec2>,
@@ -73,7 +73,7 @@ pub struct DrawParams<'a> {
 }
 
 impl<'a> DrawParams<'a> {
-    pub fn new(texture: &'a Texture) -> Self {
+    pub fn new(texture: &'a GpuTexture) -> Self {
         Self {
             texture,
             source: None,
@@ -414,7 +414,7 @@ impl SpriteBatch {
         Ok(stats)
     }
 
-    fn ensure_bind_group(&mut self, gd: &GraphicsDevice, tex_id: usize, texture: &Texture) {
+    fn ensure_bind_group(&mut self, gd: &GraphicsDevice, tex_id: usize, texture: &GpuTexture) {
         if !self.texture_cache.contains_key(&tex_id) {
             let bind_group = gd.create_bind_group(Some("SpriteBatch texture"), &[
                 BindGroupEntry::Texture { texture, sampler: &self.current_sampler },

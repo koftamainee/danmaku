@@ -36,3 +36,16 @@ impl<T: Asset> std::fmt::Debug for Handle<T> {
         write!(f, "Handle<{}>({:?})", short_name, self.key)
     }
 }
+
+impl<T: Asset> Handle<T> {
+    pub fn from_key(key: slotmap::DefaultKey) -> Self {
+        Self {
+            key,
+            _marker: std::marker::PhantomData,
+        }
+    }
+
+    pub fn key(&self) -> slotmap::DefaultKey {
+        self.key
+    }
+}

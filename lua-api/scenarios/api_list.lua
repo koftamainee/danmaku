@@ -2,14 +2,17 @@ return {
     run = function(danmaku) 
         -- global namespace - project structure function
         danmaku.log("prints the message")
-        local module = danmaku.import("path/to/module.lua") -- imports module type file
+        local module = danmaku.import("path/to/module") -- imports module type file
         
         -- stage - stage management
-        danmaku.stage.load("path/to/stage.lua") -- loads stage (blocking)
+        danmaku.stage.load("path/to/stage") -- loads stage (blocking)
 
 
         -- content - loads and manage assets
-        local spritesheet = danmaku.content.load_spritesheet("path/to/spritesheet.lua") -- load spritesheet from editor-generated file
+        -- NOTE: spritesheet internally using one texture and it is more preferrable to optimize draw calls
+        -- NOTE: though everywhere you use sprite, you can use spritesheet.sprite_name, they are the same handle
+        local spritesheet = danmaku.content.load_spritesheet("path/to/spritesheet") -- load spritesheet from editor-generated file
+        local sprite = danmaku.content.load_sprite("path/to/sprite") -- load sprite from editor-generated file
 
         -- time - coroutine management function
         -- NOTE: time correlate with task modules, it is abstraction from coroutines

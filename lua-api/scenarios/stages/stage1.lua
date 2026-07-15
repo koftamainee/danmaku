@@ -4,8 +4,8 @@ return {
     prepare = function(danmaku, ctx)
         -- all bullets types available like bullets.bullet_red
         -- assets.EoSD_bullets.lua file is generated in the editor
-        ctx.bullets = danmaku.content.load_spritesheet("assets/EoSD_bullets.lua")
-        local patterns = danmaku.import("shared/patterns.lua")
+        ctx.bullets = danmaku.content.load_spritesheet("assets/EoSD_bullets")
+        local patterns = danmaku.import("shared/patterns")
         ctx.patterns = {
             patterns.blooming_flower,
             patterns.spinning_cross,

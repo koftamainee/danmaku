@@ -1,5 +1,7 @@
 use glam::Vec2;
 use crate::bullet::BulletKey;
+use crate::tween::EasingKind;
+use crate::sprite_handle::SpriteHandle;
 
 pub enum MotionKind {
     None,
@@ -14,59 +16,15 @@ pub enum MotionKind {
     },
 }
 
-pub enum EasingKind {
-    Linear,
-    QuadIn,
-    QuadOut,
-    QuadInOut,
-    CubicIn,
-    CubicOut,
-    Bounce,
-    Elastic,
-}
-
-pub fn apply_easing(t: f32, kind: &EasingKind) -> f32 {
-    let t = t.clamp(0.0, 1.0);
-    match kind {
-        EasingKind::Linear => t,
-        EasingKind::QuadIn => t * t,
-        EasingKind::QuadOut => 1.0 - (1.0 - t) * (1.0 - t),
-        EasingKind::QuadInOut => {
-            if t < 0.5 {
-                2.0 * t * t
-            } else {
-                1.0 - (-2.0 * t + 2.0).powi(2) / 2.0
-            }
-        }
-        EasingKind::CubicIn => t * t * t,
-        EasingKind::CubicOut => 1.0 - (1.0 - t).powi(3),
-        EasingKind::Bounce => {
-            if t < 1.0 / 2.75 {
-                7.5625 * t * t
-            } else if t < 2.0 / 2.75 {
-                let t = t - 1.5 / 2.75;
-                7.5625 * t * t + 0.75
-            } else if t < 2.5 / 2.75 {
-                let t = t - 2.25 / 2.75;
-                7.5625 * t * t + 0.9375
-            } else {
-                let t = t - 2.625 / 2.75;
-                7.5625 * t * t + 0.984375
-            }
-        }
-        EasingKind::Elastic => {
-            if t == 0.0 || t == 1.0 {
-                t
-            } else {
-                -2.0_f32.powf(10.0 * t - 10.0) * (t * 10.0 - 10.75) * (2.0 * std::f32::consts::PI / 3.0).sin()
-            }
-        }
-    }
+pub struct BulletCommon {
+    pub position: Vec2,
+    pub sprite: SpriteHandle,
+    pub lifetime: Option<u32>,
+    pub age: u32,
 }
 
 pub struct PolarBullet {
-    pub position: Vec2,
-    pub lifetime: Option<u32>,
+    pub common: BulletCommon,
     pub parent: Option<BulletKey>,
     pub parent_offset: Vec2,
     pub speed: f32,
@@ -78,28 +36,25 @@ pub struct PolarBullet {
     pub angular_acceleration: f32,
     pub min_angular_velocity: Option<f32>,
     pub max_angular_velocity: Option<f32>,
-    pub age: u32,
     pub motion: MotionKind,
 }
 
 pub struct ControlledBullet {
-    pub position: Vec2,
-    pub age: u32,
-    pub lifetime: Option<u32>,
+    pub common: BulletCommon,
     pub on_update: Option<Box<dyn FnMut(&mut Self, BulletKey)>>,
 }
 
 impl ControlledBullet {
     pub fn set_position(&mut self, x: f32, y: f32) {
-        self.position = Vec2::new(x, y);
+        self.common.position = Vec2::new(x, y);
     }
 
     pub fn kill(&mut self) {
-        self.lifetime = Some(0);
+        self.common.lifetime = Some(0);
     }
 
     pub fn set_lifetime(&mut self, frames: u32) {
-        self.lifetime = Some(frames);
+        self.common.lifetime = Some(frames);
     }
 }
 
@@ -109,10 +64,14 @@ pub enum Bullet {
 }
 
 impl Bullet {
-    pub fn root(x: f32, y: f32) -> PolarBulletBuilder {
+    pub fn root(x: f32, y: f32, sprite: SpriteHandle) -> PolarBulletBuilder {
         PolarBulletBuilder {
-            position: Vec2::new(x, y),
-            lifetime: None,
+            common: BulletCommon {
+                position: Vec2::new(x, y),
+                sprite,
+                lifetime: None,
+                age: 0,
+            },
             parent: None,
             parent_offset: Vec2::ZERO,
             speed: 0.0,
@@ -128,10 +87,14 @@ impl Bullet {
         }
     }
 
-    pub fn child(parent: BulletKey, offset: Vec2) -> PolarBulletBuilder {
+    pub fn child(parent: BulletKey, offset: Vec2, sprite: SpriteHandle) -> PolarBulletBuilder {
         PolarBulletBuilder {
-            position: Vec2::ZERO,
-            lifetime: None,
+            common: BulletCommon {
+                position: Vec2::ZERO,
+                sprite,
+                lifetime: None,
+                age: 0,
+            },
             parent: Some(parent),
             parent_offset: offset,
             speed: 0.0,
@@ -150,33 +113,52 @@ impl Bullet {
     pub fn controlled(
         x: f32,
         y: f32,
+        sprite: SpriteHandle,
         cb: impl FnMut(&mut ControlledBullet, BulletKey) + 'static,
     ) -> ControlledBulletBuilder {
         ControlledBulletBuilder {
-            position: Vec2::new(x, y),
-            lifetime: None,
+            common: BulletCommon {
+                position: Vec2::new(x, y),
+                sprite,
+                lifetime: None,
+                age: 0,
+            },
             on_update: Some(Box::new(cb)),
         }
     }
 
     pub fn position(&self) -> Vec2 {
         match self {
-            Bullet::Polar(p) => p.position,
-            Bullet::Controlled(c) => c.position,
+            Bullet::Polar(p) => p.common.position,
+            Bullet::Controlled(c) => c.common.position,
+        }
+    }
+
+    pub fn sprite(&self) -> SpriteHandle {
+        match self {
+            Bullet::Polar(p) => p.common.sprite,
+            Bullet::Controlled(c) => c.common.sprite,
         }
     }
 
     pub fn lifetime(&self) -> Option<u32> {
         match self {
-            Bullet::Polar(p) => p.lifetime,
-            Bullet::Controlled(c) => c.lifetime,
+            Bullet::Polar(p) => p.common.lifetime,
+            Bullet::Controlled(c) => c.common.lifetime,
         }
     }
 
     pub fn set_lifetime(&mut self, v: Option<u32>) {
         match self {
-            Bullet::Polar(p) => p.lifetime = v,
-            Bullet::Controlled(c) => c.lifetime = v,
+            Bullet::Polar(p) => p.common.lifetime = v,
+            Bullet::Controlled(c) => c.common.lifetime = v,
+        }
+    }
+
+    pub fn rotation(&self) -> f32 {
+        match self {
+            Bullet::Polar(p) => p.angle,
+            Bullet::Controlled(_) => 0.0,
         }
     }
 
@@ -193,8 +175,7 @@ impl Bullet {
 }
 
 pub struct PolarBulletBuilder {
-    position: Vec2,
-    lifetime: Option<u32>,
+    common: BulletCommon,
     parent: Option<BulletKey>,
     parent_offset: Vec2,
     speed: f32,
@@ -256,7 +237,7 @@ impl PolarBulletBuilder {
     }
 
     pub fn lifetime(mut self, v: u32) -> Self {
-        self.lifetime = Some(v);
+        self.common.lifetime = Some(v);
         self
     }
 
@@ -267,8 +248,7 @@ impl PolarBulletBuilder {
 
     pub fn build(self) -> Bullet {
         Bullet::Polar(PolarBullet {
-            position: self.position,
-            lifetime: self.lifetime,
+            common: self.common,
             parent: self.parent,
             parent_offset: self.parent_offset,
             speed: self.speed,
@@ -280,29 +260,25 @@ impl PolarBulletBuilder {
             angular_acceleration: self.angular_acceleration,
             min_angular_velocity: self.min_angular_velocity,
             max_angular_velocity: self.max_angular_velocity,
-            age: 0,
             motion: self.motion,
         })
     }
 }
 
 pub struct ControlledBulletBuilder {
-    position: Vec2,
-    lifetime: Option<u32>,
+    common: BulletCommon,
     on_update: Option<Box<dyn FnMut(&mut ControlledBullet, BulletKey)>>,
 }
 
 impl ControlledBulletBuilder {
     pub fn lifetime(mut self, v: u32) -> Self {
-        self.lifetime = Some(v);
+        self.common.lifetime = Some(v);
         self
     }
 
     pub fn build(self) -> Bullet {
         Bullet::Controlled(ControlledBullet {
-            position: self.position,
-            age: 0,
-            lifetime: self.lifetime,
+            common: self.common,
             on_update: self.on_update,
         })
     }
