@@ -3,7 +3,7 @@ return {
 
     prepare = function(danmaku, ctx)
         ctx.bullets =  danmaku.content.load_spritesheet("assets/EoSD_bullets")
-    end
+    end,
 
 	run = function(danmaku, ctx)
 		--- Full bullet structure (all optional except sprite, x/y if no parent):

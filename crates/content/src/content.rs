@@ -87,5 +87,5 @@ pub enum LoadError<E: std::error::Error + 'static> {
 }
 
 fn read_asset_bytes(path: &AssetPath) -> Result<Vec<u8>, std::io::Error> {
-    std::fs::read(format!("mods/{}/{}", path.mod_id, path.path))
+    std::fs::read(format!("lua-api/{}/{}", path.mod_id, path.path))
 }

@@ -189,9 +189,10 @@ impl ApplicationHandler for App {
                         Region { src: Rect::new(160.0, 48.0, 16.0, 16.0), hitbox: None },
                         Region { src: Rect::new(176.0, 48.0, 16.0, 16.0), hitbox: None },
                     ];
+                    let bullet_atlas_name = "base:assets/EoSD_bullets.png";
                     let handle = content
                         .load::<Atlas>(
-                            &AssetPath::parse("base:bullets/EoSD_bullets.png").unwrap(),
+                            &AssetPath::parse(bullet_atlas_name).unwrap(),
                             AtlasLoadContext {
                                 gpu: &graphics_device,
                                 regions,
