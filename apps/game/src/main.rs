@@ -1,9 +1,10 @@
-use std::sync::Arc;
-use content::Content;
+use danmaku::{Danmaku, SharedDanmaku};
 use renderer::{
-    BlendMode, Camera, Color, FilterMode, GraphicsDevice,
-    OrthographicCamera, RendererError, SpriteBatch, BeginParams,
+    BeginParams, BlendMode, Camera, Color, FilterMode, GraphicsDevice, OrthographicCamera,
+    RendererError, SpriteBatch,
 };
+use scripting::ScenarioRunner;
+use std::sync::Arc;
 use winit::{
     application::ApplicationHandler,
     event::WindowEvent,
@@ -16,53 +17,18 @@ const WORLD_H: f32 = 480.0;
 
 struct Game {
     window: Arc<Window>,
-    graphics_device: GraphicsDevice,
-    content: Content,
-    camera: OrthographicCamera,
-    sprite_batch: SpriteBatch,
-    tick: u32,
+    danmaku: SharedDanmaku,
+    scenario: ScenarioRunner,
 }
 
 impl Game {
-    fn update(&mut self) {
-        self.tick = self.tick.wrapping_add(1);
+    fn update(&self) {
+        self.scenario.update();
+        self.danmaku.borrow_mut().update();
     }
 
     fn render(&mut self) {
-        let mut frame = match self.graphics_device.begin_frame() {
-            Ok(frame) => frame,
-            Err(RendererError::SurfaceOutdated) => {
-                let size = self.window.inner_size();
-                self.graphics_device.resize(size.width, size.height);
-                return;
-            }
-            Err(err) => {
-                eprintln!("render error: {err}");
-                return;
-            }
-        };
 
-        let (w, h) = self.graphics_device.surface_size();
-        self.camera.zoom = (w as f32 / WORLD_W).min(h as f32 / WORLD_H);
-        let vp = self.camera.view_projection(w as f32, h as f32);
-
-        frame.clear(Color::CORNFLOWER_BLUE);
-
-        self.sprite_batch.begin(
-            &self.graphics_device,
-            BeginParams {
-                view_projection: vp,
-                blend_mode: BlendMode::AlphaBlend,
-                viewport: None,
-                sampler: FilterMode::Nearest,
-            },
-        );
-
-        self.sprite_batch
-            .end(&self.graphics_device, &mut frame)
-            .unwrap();
-
-        self.graphics_device.end_frame(frame);
     }
 }
 
@@ -103,19 +69,23 @@ impl ApplicationHandler for App {
                 ))
                 .expect("failed to create renderer");
 
-                let content = Content::new();
                 let camera = OrthographicCamera::default();
 
                 let sprite_batch =
                     SpriteBatch::new(&graphics_device).expect("failed to create sprite batch");
 
+                let danmaku = Danmaku::shared();
+
+                let scenario = ScenarioRunner::new("base", danmaku.clone())
+                    .expect("failed to create scenario runner");
+
                 *self = App::Running(Game {
                     window,
+                    danmaku,
                     graphics_device,
-                    content,
                     camera,
                     sprite_batch,
-                    tick: 0,
+                    scenario,
                 });
             }
         }

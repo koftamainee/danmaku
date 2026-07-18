@@ -1,0 +1,10 @@
+[package]
+name = "danmaku"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+engine = { path = "../engine" }
+content = { path = "../content" }
+renderer = { path = "../renderer" }
+glam = "0.33.2"

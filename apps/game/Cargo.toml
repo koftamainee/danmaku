@@ -4,11 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-core = { path = "../../crates/core" }
 pollster = "1.0.1"
 renderer = { path = "../../crates/renderer" }
 content = { path = "../../crates/content" }
 scripting = { path = "../../crates/scripting" }
+danmaku = { path = "../../crates/danmaku" }
+engine = { path = "../../crates/engine" }
 winit = "0.30.13"
 log = "0.4.33"
 slotmap = "1.1.1"

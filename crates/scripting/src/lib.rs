@@ -1,16 +1,7 @@
-mod scenario_runner;
+pub mod api;
+pub mod scenario_runner;
+mod scheduler;
+mod coroutine_manager;
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use scenario_runner::ScenarioRunner;
+pub use scenario_runner::ScenarioError;
